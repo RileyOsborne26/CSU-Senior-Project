@@ -67,16 +67,16 @@ The proposal will contain the following information:
 
 - [ ] Project Description :iphone:
 
-- [ ] Proposed Implementation Language(s) :octocat:
+- [ ] Proposed Implementation Language(s) :snake::coffee::dart:
 
 - [ ] Libraries, Packages, Development Kits, etc. to be used in in the proposed implementation languages(s) :wrench:
 
-- [ ] Additional Software/Equipment Needed :computer::joystick:
+- [ ] Additional Software/Equipment Needed :computer::joystick::iphone:
 
 - [ ] Personal Motivation :cake:  
     *Describes how this project will further student’s knowledge in the field?*
 
-- [ ] Outline of Future Research Efforts :books::rocket:  
+- [ ] Outline of Future Research Efforts :books::rocket::test_tube:  
     *Describes how the student will complete his/her project. What deliverables can be expected?*
 
 - [ ] Schedule :calendar: :watch:  
@@ -127,7 +127,7 @@ Each requirement will contain at least the following information.
 6.  Priority
 7.  Dependencies (*the ID of any requirement that must be completed before this requirement if any.*)
 
-Remember, good requirements are precise, testable, unambiguous, and describe the real need. Also, check out this video overview of [What is a Software Requirement Specification](https://www.youtube.com/watch?v=JSkGKcmDcKE).
+Remember, good requirements are precise, testable, unambiguous, and describe the real need. Also, check out this video overview of [What is a Software Requirement Specification](https://www.youtube.com/watch?v=7cwW1P-8Opc&t=6).
 
 ## Grading
 
@@ -145,7 +145,7 @@ The student is expected to schedule a meeting with the project advisor within th
 
 ### Academic Integrity and the Honor Code
 
-All students are expected to adhere to Charleston Southern University’s [Code of Academic Honesty](https://www.charlestonsouthern.edu/wp-content/uploads/Policy-R-58-updated-Feb-2020.pdf). For example, all work must be original and must not be copied from another student. Failure to follow this guideline will be considered a violation of the code and will be treated accordingly. Students are encouraged to ask their instructor(s) for clarification regarding their academic dishonesty standards.
+All students are expected to adhere to Charleston Southern University’s [Code of Academic Honesty](https://www.charlestonsouthern.edu/wp-content/uploads/Policy-R-58-updated-Feb-2023.pdf). For example, all work must be original and must not be copied from another student. Failure to follow this guideline will be considered a violation of the code and will be treated accordingly. Students are encouraged to ask their instructor(s) for clarification regarding their academic dishonesty standards.
 
 ### Course Evaluations
 
@@ -178,16 +178,18 @@ CSU's basic netiquette rules are:
 
 Any student who may need accommodations should review the requirements/procedures on the [Disability Services website](https://www.charlestonsouthern.edu/academics/student-success-center/disability-services/). Once approved to receive accommodations through Disability Services, the student will need to contact the instructor.
 
-### COVID-19 Considerations
-
-Students must report symptoms or exposure PRIOR to their absence by screening via Live Safe or emailing <lglover@csuniv.edu> and must respond to all follow-up communication (via email or telephone) in a timely (i.e., 12-24 hours) manner.
-
-**PLEASE do not meet in-person if you are sick. By doing so you are helping ensure the safety of your fellow students and the CSU staff and faculty. You must e-mail instructors before the meeting to inform them you’re sick or have been exposed to COVID-19. You can communicate remotely with your faculty advisor and project team.**
-
 ### Nondiscrimination Policy and Student Rights
 
-Charleston Southern University does not illegally discriminate based on race, color, national or ethnic origin, sex, disability, age, religion, genetic information, veteran or military status, or any other basis.  Inquiries regarding the non-discrimination policies should be directed to Latitia R. Adams, Title IX Coordinator, 843-863-7374, <ladams@csuniv.edu>.  Students should refer to the [CSU Student Handbook](https://www.charlestonsouthern.edu/wp-content/uploads/studenthandbook.pdf) to be fully informed of their rights and remedies.
+Charleston Southern University (CSU) does not illegally discriminate based on race, age, color, national or ethnic origin, disability, sex, pregnancy, childbirth or related medical conditions, religion, genetic information, veteran or military status, or any other basis on which the university is prohibited from discrimination under local, state, or federal law, in its employment or in the provision of its services. Inquiries or complaints regarding the non-discrimination policy, compliance with Title IX of the Education Amendments of 1972, and inquiries or complaints regarding the disability non-discrimination policy including compliance with Section 504 of the Rehabilitation Act of 1973 can be directed to our Title IX campus contacts: 
+
+*  [Dr. Annie Watson](https://www.charlestonsouthern.edu/directory/watson-annie/) / <awatson@csuniv.edu> / 843 863-7159 (accommodations for disabilities or pregnancy)
+*  [Ms. Carrie Gomez](https://www.charlestonsouthern.edu/directory/carrie-gomez/) /  <cgomez@csuniv.edu> / 843 863-7629 (concerns related to creating and maintaining equality between the men’s and women's athletic programs)
+*  [Ms. Lindsey Walke](https://www.charlestonsouthern.edu/directory/walke-lindsey/) /  <lwalke@csuniv.edu> / 843 863-8047 (concerns related to sexual harassment and sexual violence) 
+
+For further information you can visit [CSU Title IX webpage]( https://www.charlestonsouthern.edu/offices/title-ix/) or email <titleix@csuniv.edu>. 
+
+Students should refer to the [CSU Student Handbook](https://www.charlestonsouthern.edu/current-students/student-resources/) to be fully informed of their rights and remedies.
 
 ------------
 
-See all course, department, and university policies located in [Blackboard](https://csuniv.blackboard.com) and the [CSU Student Handbook](https://www.charlestonsouthern.edu/wp-content/uploads/studenthandbook.pdf).
+See all course, department, and university policies located in [Blackboard](https://csuniv.blackboard.com) and the [CSU Student Handbook](https://www.charlestonsouthern.edu/current-students/student-resources/).

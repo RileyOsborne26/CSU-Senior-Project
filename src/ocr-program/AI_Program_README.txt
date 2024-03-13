@@ -35,6 +35,11 @@ Script name in GitHub repository:
 Text detector of choice: EAST algorithm
 *EAST input images must be a multiple of 32 pixels
 
+To set up, go to:
+    https://github.com/ZER-0-NE/EAST-Detector-for-text-detection-using-OpenCV/blob/master/frozen_east_text_detection.pb
+    Download the raw file.
+    Place it in your workfolder with the script that will be using it.
+
 Pip commands needed for requirements (EasyOCR & Pytesseract):
     pip install numpy
     pip install opencv-python

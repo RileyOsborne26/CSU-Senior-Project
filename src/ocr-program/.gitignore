@@ -1,3 +1,5 @@
 venv/*
 __pycache__/*
 .idea/*
+# Ignore the large EAST algorithm file. Set up instructions includes in AI program text file
+frozen_east_text_detection.pb

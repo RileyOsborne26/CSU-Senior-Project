@@ -55,3 +55,6 @@
 # Ignore db test files
 /environment/footballcard_app/db/test.*
 #db/test.*
+
+# Ignore the EAST algorithm file (large file)
+#/ocr-program/frozen_east_text_detection.pb

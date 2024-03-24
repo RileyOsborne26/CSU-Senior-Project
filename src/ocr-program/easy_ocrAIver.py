@@ -9,8 +9,8 @@ import pytesseract
 # The arguments are an image and array of coordinates, respectively
 # array in form [x,y,w,h]
 def coordinates_to_image(image, array):
-    # crop is in form [y:y+h, x:x+w]
-    new_image = image[(array[1]):(array[1]+array[3]), (array[0]):(array[0]+array[2])]
+    # crop is in form [y:y+h, x:x+w], round is to erase an error type where float is used for some reason
+    new_image = image[round((array[1])):round((array[1]+array[3])), round((array[0])):round((array[0]+array[2]))]
     
     return new_image
 
@@ -31,7 +31,6 @@ sharp = cv2.filter2D(gray, -1, kernel)
 result = reader.readtext(img)
 
 text = ""
-count = 0
 
 # the index for each will be parallel so index[0] for all arrays gets the confidence, box, and word
 text_boxes = []
@@ -59,14 +58,6 @@ for res in result:
             # Create an array with all components for a bounding box and append to text_boxes
             bounding_box = [res[i][0][0], res[i][0][1], (res[i][1][0] - res[i][0][0]), (res[i][2][1] - res[i][0][1])]
             text_boxes.append(bounding_box)
-            print(res[i][0])
-            print(res[i][1])
-            print(res[i][2])
-            print(res[i][3])
-        else:
-            print(res[i])
-        print(count)
-        count = count + 1
 
 # print the results
 for i in range ( len(words) ):
@@ -85,10 +76,34 @@ for i in range ( len(words) ):
     cropped_images.append(coordinates_to_image(img, text_boxes[i]))
 
     # show all of the cropped images
-    cv2.imshow("Text Detection", cropped_images[i])
+    cv2.imshow("Text Detection #" + str(i), cropped_images[i])
     cv2.waitKey(0)
 
     # run pytesseract if confidence level is under 0.9
+    # MAKE SURE the path is to the correct location with the pytesseract executable
+    pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
+
+    # for config help, type "tesseract --help-oem" and "tesseract --help-psm"
+    # PSMs without a generally applicable use for the project: [0, 1, 2, 9]
+    config = r'-l eng --oem 1 --psm 6'
+    text = pytesseract.image_to_string(cropped_images[i], config=config)
+    ## testing psm configs
+    print("\nPSM: 6")
+    print(text) 
+
+    #
+    config = r'-l eng --oem 1 --psm 7'
+    text = pytesseract.image_to_string(cropped_images[i], config=config)
+    ## testing psm configs
+    print("\nPSM: 7")
+    print(text) 
+
+    #
+    config = r'-l eng --oem 1 --psm 13'
+    text = pytesseract.image_to_string(cropped_images[i], config=config)
+    ## testing psm configs
+    print("\nPSM: 13")
+    print(text)
 
     result = reader.readtext(cropped_images[i])
     for res in result:

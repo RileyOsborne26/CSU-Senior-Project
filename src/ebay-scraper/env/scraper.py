@@ -77,10 +77,10 @@ while(product_set not in SUPPORTED_SETS):
 # tweak the product set variable for the url once the input is validified
 product_set = product_set.replace(" ", "+")
 
-# SPECIAL CHECK: add a "-optic" component to the product_set variable to improve search results.
+# SPECIAL CHECK: add a "-optic" and "-elite" component to the product_set variable to improve search results.
 # it differentiates the "Donruss" search results from the "Donruss Optic" search results.
 if(product_set == "Donruss"):
-    product_set = "Donruss+-optic"
+    product_set = "Donruss+-optic+-elite"
 
 ### get first name
 if(argCount < 4):
@@ -117,7 +117,7 @@ if isGraded == "y":
     # translate result into url part
     gradedUrlBit = "=" + gradeNum
 else:
- gradedUrlBit = "d=No"
+    gradedUrlBit = "d=No"
 
 
 
@@ -127,6 +127,15 @@ isParallel = "0"
 parallelColor = "0"
 isNumbered = "0"
 printRun = "0"
+
+# ask if the card is a parallel
+
+
+# get the card's parallel color and type if user input is yes
+
+
+# if no then add colors to exclude from the url
+
 
 # verify all information before scraping???
 
@@ -166,7 +175,7 @@ if (len(userAdditions) < 1):
     userAdditions = 0
 
 # building the url for ebay sold data
-url = f'https://www.ebay.com/sch/i.html?_nkw={year}+{product_set}+{first_name}+{last_name}+{userAdditions}+{isRookie}+{isAuto}+{isParallel}+{parallelColor}+{isNumbered}+{printRun}&Grade{gradedUrlBit}&_sacat=0&type=s&_dcat=261328&LH_Complete=1&LH_Sold=1'
+url = f'https://www.ebay.com/sch/i.html?_nkw={year}+{product_set}+{first_name}+{last_name}+{userAdditions}+{isRookie}+{isAuto}+{isParallel}+{parallelColor}+{isNumbered}+{printRun}&Grade{gradedUrlBit}&_sacat=0&type=s&_dcat=261328&LH_Complete=1&LH_Sold=1&_ipg=240'
 
 # take out all unset values
 url = url.replace("+0", "")
@@ -177,7 +186,34 @@ print(url)
 page = requests.get(url)
 
 # parse the HTML document with bs4
+# If this isn't working then a User-Agent header is probably needed
 soup = BeautifulSoup(page.text, 'html.parser')
 
 # scraping logic
 print('scraping logic')
+
+# arrays to hold the titles and prices. search results holds all the returned listings
+search_results = []
+titles = []
+prices = []
+
+#####
+# there are 4 cases:
+# 1. there are enough results that it is less than 240 returned and enough to keep ebay from searching and returning from beyond our parameters
+# 2. there are more than 240 results returned and we would want the date for the last result on the first page
+# 3. there are not many results so ebay tries finding other results. After a divider, the returned results unfortunately use the same class.
+# 4. there are no results
+#####
+
+# get the number of search results!!!
+results_num = soup.find('div', 'srp-controls__control srp-controls__count').find_next('span', class_='BOLD').text
+print(results_num)
+
+if results_num > 0 and results_num <= 240:
+    search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li')
+    #for 
+# add all the listings minus the last one on the pages into the results array
+#search_results = soup.find('div', id='srp-river-results').find('ul', class_='srp-results srp-list clearfix')####.find_all('li', class_='s-item s-item__before-answer s-item__pl-on-bottom')
+soup.find_next('li', attrs={'data-viewport': True})
+
+# this line gets the last listing on the page

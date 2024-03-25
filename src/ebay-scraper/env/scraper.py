@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import sys
+import csv
 
 # source URL: brightdata.com/blog/how-tos/how-to-scrape-ebay-in-python
 # Author: Riley Osborne
@@ -33,6 +34,33 @@ def print_set_products():
     print("\nSupported sets: ")
     for i in SUPPORTED_SETS:
         print(i + ", ")
+
+# scrapes the sold listings, I will pass all the arrays and the soup as arguments
+def scrape_page(titles, prices, shipping, search_results, results_csvformat, listings_num):
+    search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li')
+
+    # iterate only for the amount of search results returned
+    for i in range(listings_num):
+        item_title = search_results[i].find('div').find(class_='s-item__info clearfix').find('a').find('div').find('span').text
+        titles.append(item_title)
+        
+        # temp prices is used here to hold the price, type of listing (# of bids, best offer, or buy it now), and the shipping cost
+        # this is because the html is not different enough to ignore the type of listing unless there are tools out there that I am missing. This gets the job done though
+        temp_prices = search_results[i].find('div').find(class_='s-item__info clearfix').find(class_='s-item__details clearfix').find_all('div', class_='s-item__detail s-item__detail--primary')
+        main_price = temp_prices[0].find('span').find('span').text
+        ship_price = temp_prices[2].find('span').text
+        prices.append(main_price)
+        shipping.append(ship_price)
+
+        # put it into the csv dictionary form
+        results_csvformat.append(
+            {
+                'name': item_title,
+                'main price': main_price,
+                'shipping price': ship_price
+            }
+        )
+    print("scrape_page function not complete")
 
 # get the current year for user input validation
 currentYear = datetime.now().year
@@ -196,6 +224,10 @@ print('scraping logic')
 search_results = []
 titles = []
 prices = []
+shipping = []
+
+# used to input results into a csv for checking
+results_csvformat = []
 
 #####
 # there are 4 cases:
@@ -207,11 +239,33 @@ prices = []
 
 # get the number of search results!!!
 results_num = soup.find('div', 'srp-controls__control srp-controls__count').find_next('span', class_='BOLD').text
+results_num = int(results_num)    # make it an integer
 print(results_num)
 
+# scrape the page depending on the number of results gotten
 if results_num > 0 and results_num <= 240:
-    search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li')
-    #for 
+    scrape_page(titles, prices, shipping, search_results, results_csvformat, results_num)
+elif results_num > 240:
+    scrape_page(titles, prices, shipping, search_results, results_csvformat, 240)
+
+# This csv file will be used to check the results of the web scraping
+# create a "results.csv" if not present
+csv_file = open('results.csv', 'w', encoding='utf-8', newline='')
+
+# initializing the writer object to insert data
+# in the CSV file
+writer = csv.writer(csv_file)
+
+# writing the header of the CSV file
+writer.writerow(['Name', 'Main Price', 'Shipping Cost'])
+
+# writing each row of the CSV
+for result in results_csvformat:
+    writer.writerow(result.values())
+
+# terminating the operation and releasing the resources
+csv_file.close()
+
 # add all the listings minus the last one on the pages into the results array
 #search_results = soup.find('div', id='srp-river-results').find('ul', class_='srp-results srp-list clearfix')####.find_all('li', class_='s-item s-item__before-answer s-item__pl-on-bottom')
 soup.find_next('li', attrs={'data-viewport': True})

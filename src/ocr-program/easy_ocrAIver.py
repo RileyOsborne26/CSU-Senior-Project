@@ -14,105 +14,175 @@ def coordinates_to_image(image, array):
     
     return new_image
 
+# calls the easyocr reader to find and return the OCR results for the image parameter (2nd) given.
+def easyocr_get_results(reader, img):
+    result = reader.readtext(img)
+
+    return result
+
+# This function takes an OCR results array, an array of text bounding boxes,
+# an array of words found, an array of OCR confidence levels, and a string for image text.
+# returns text
+def add_OCRdata_to_arrays(result, text_boxes, words, confidence_level, text):
+    # x:y is the top left corner of the rectangle
+    # W = res[i][1][0] - res[i][0][0]
+    # H = res[i][2][1] - res[i][0][1]
+    # coordinates array is [x,y,w,h]
+    for res in result:
+        # add to text string
+        text += res[1] + ","
+
+        # adds each element to its array
+        for i in range ( len(res) ):
+            # add the word to the words array
+            if i % 3 == 1:
+                words.append(res[i])
+
+            # add the confidence level in the appropriate array
+            if i % 3 == 2:
+                confidence_level.append(res[i])
+
+            # prints bounding boxes coordinates and adds them to an array
+            if i % 3 == 0:
+                # Create an array with all components for a bounding box and append to text_boxes
+                bounding_box = [res[i][0][0], res[i][0][1], (res[i][1][0] - res[i][0][0]), (res[i][2][1] - res[i][0][1])]
+                text_boxes.append(bounding_box)
+
+    return text
+
+# Takes the three arrays with the OCR results and prints them to the screen
+def print_OCRresults(text_boxes, words, confidence_level):
+    # print the results
+    for i in range ( len(words) ):
+        print("Bounding Box #" + str(i) + ": ")
+        print(text_boxes[i])
+        print("Word #" + str(i) + ": ")
+        print(words[i])
+        print("Confidence Level #" + str(i) + ": ")
+        print(confidence_level[i])
+        print('\n')
+
+# Crops the images based off of EasyOCR's results, runs pytesseract on the cropped images,
+# displays the cropped images, and prints the pytesseract OCR results. Also re-runs easyocr on
+# the CROPPED version of the image and displays those results as well.
+def pytesseract_crop_and_display(reader, img, cropped_images, text_boxes, words):
+    # uses the words array to iterate through the found text
+    for i in range ( len(words) ):
+        # crops the images using the well set up bounding box coordinates stored in an array for each instance of text.
+        cropped_images.append(coordinates_to_image(img, text_boxes[i]))
+
+        # show all of the cropped images, if any have an error displaying the program will no longer crash!
+        try:
+            cv2.imshow("Text Detection #" + str(i), cropped_images[i])
+            cv2.waitKey(0)
+        except cv2.error as e:
+            print("OpenCV Error:", e)
+            continue     # because it is a cropped image problem, the rest will not work.
+
+        # run pytesseract if confidence level is under 0.9
+        # MAKE SURE the path is to the correct location with the pytesseract executable
+        pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
+
+        # create uniform flags to add like blacklists and whitelists
+        addFlags = r'--blacklist \|[{]}'
+
+        ### for config help, type "tesseract --help-oem" and "tesseract --help-psm"
+        ### to read an article about the psm settings, my source for the comments provided is:
+        ### https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
+        ### PSMs without a generally applicable use for the project: [0, 1, 2, 9]
+        # PSM 6: The text is treated as having a single font face with no variation. Good for single,
+        #      consistent font and for materials like simple book pages.
+        config = r'-l eng --oem 1 --psm 6'
+        config += addFlags #add extra flags
+        text = pytesseract.image_to_string(cropped_images[i], config=config)
+        ## testing psm configs
+        print("\nPSM: 6")
+        print(text) 
+
+        # PSM 7: is for a single line of UNIFORM text. A good use case is license plates.
+        config = r'-l eng --oem 1 --psm 7'
+        config += addFlags #add extra flags
+        text = pytesseract.image_to_string(cropped_images[i], config=config)
+        ## testing psm configs
+        print("\nPSM: 7")
+        print(text) 
+
+        # PSM 13: throws OCD, segmentation, and tesseract preprocessing out the window. Useful for when
+        #      those things HURT the accuracy, the crop is too close, or the font is unrecognized.
+        #      Using PSM 13 is seen as a last resort tactic.
+        config = r'-l eng --oem 1 --psm 13'
+        config += addFlags #add extra flags
+        text = pytesseract.image_to_string(cropped_images[i], config=config)
+        ## testing psm configs
+        print("\nPSM: 13")
+        print(text)
+
+        # re-run EasyOCR with the cropped images.
+        result = reader.readtext(cropped_images[i])
+        for res in result:
+            print(res)
+
 
 reader = easyocr.Reader(['en'], gpu=False)
 detection.CRAFT
 
 # the test-images folder is used so subdirectory maps to the image requested.
 subdirectory = "test-images/"
-file = subdirectory + input('Enter file name for card front image: ')
-img = cv2.imread(file)
+fileF = subdirectory + input('Enter file name for card FRONT image: ')
+imgF = cv2.imread(fileF)
 
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# this image is for the back of the card.
+#fileB = subdirectory + input('Enter file name for card BACK image: ')
+#imgB = cv2.imread(fileB)
+
+gray = cv2.cvtColor(imgF, cv2.COLOR_BGR2GRAY)
 
 kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
 sharp = cv2.filter2D(gray, -1, kernel)
 
-result = reader.readtext(img)
+# call function to get results for the image front and back
+resultFront = easyocr_get_results(reader, imgF)
+#resultBack = easyocr_get_results(reader, imgB)
 
-text = ""
+
+### These are the variables for the FRONT of the image
+F_text = ""
 
 # the index for each will be parallel so index[0] for all arrays gets the confidence, box, and word
-text_boxes = []
-words = []
-confidence_level = []
+F_text_boxes = []
+F_words = []
+F_confidence_level = []
 
-# x:y is the top left corner of the rectangle
-# W = res[i][1][0] - res[i][0][0]
-# H = res[i][2][1] - res[i][0][1]
-# coordinates array is [x,y,w,h]
-for res in result:
-    text += res[1] + ","
+### These are the variables for the BACK of the image
+B_text = ""
 
-    for i in range ( len(res) ):
-        # add the word to the words array
-        if i % 3 == 1:
-            words.append(res[i])
+# the index for each will be parallel so index[0] for all arrays gets the confidence, box, and word
+B_text_boxes = []
+B_words = []
+B_confidence_level = []
 
-        # add the confidence level in the appropriate array
-        if i % 3 == 2:
-            confidence_level.append(res[i])
 
-        # prints bounding boxes coordinates and adds them to an array
-        if i % 3 == 0:
-            # Create an array with all components for a bounding box and append to text_boxes
-            bounding_box = [res[i][0][0], res[i][0][1], (res[i][1][0] - res[i][0][0]), (res[i][2][1] - res[i][0][1])]
-            text_boxes.append(bounding_box)
+# Gather OCR data into arrays for FRONT and BACK
+F_text = add_OCRdata_to_arrays(resultFront, F_text_boxes, F_words, F_confidence_level, F_text)
+#B_text = add_OCRdata_to_arrays(resultBack, B_text_boxes, B_words, B_confidence_level, B_text)
 
-# print the results
-for i in range ( len(words) ):
-    print("Bounding Box #" + str(i) + ": ")
-    print(text_boxes[i])
-    print("Word #" + str(i) + ": ")
-    print(words[i])
-    print("Confidence Level #" + str(i) + ": ")
-    print(confidence_level[i])
-    print('\n')
+# Print OCR results from the 3 separate arrays with parallel indexes for FRONT and BACK of card
+print_OCRresults(F_text_boxes, F_words, F_confidence_level)
+#print_OCRresults(B_text_boxes, B_words, B_confidence_level)
 
 # cropping images using bounding boxes and retrying them individually with the reader
-cropped_images = []
+F_cropped_images = []
+#B_cropped_images = []
 
-for i in range ( len(words) ):
-    cropped_images.append(coordinates_to_image(img, text_boxes[i]))
+# run the function that crops, displays, runs pytesseract, and re-runs EasyOCR for FRONT and BACK
+pytesseract_crop_and_display(reader, imgF, F_cropped_images, F_text_boxes, F_words)
+#pytesseract_crop_and_display(reader, imgB, B_cropped_images, B_text_boxes, B_words)
 
-    # show all of the cropped images
-    cv2.imshow("Text Detection #" + str(i), cropped_images[i])
-    cv2.waitKey(0)
-
-    # run pytesseract if confidence level is under 0.9
-    # MAKE SURE the path is to the correct location with the pytesseract executable
-    pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
-
-    # for config help, type "tesseract --help-oem" and "tesseract --help-psm"
-    # PSMs without a generally applicable use for the project: [0, 1, 2, 9]
-    config = r'-l eng --oem 1 --psm 6'
-    text = pytesseract.image_to_string(cropped_images[i], config=config)
-    ## testing psm configs
-    print("\nPSM: 6")
-    print(text) 
-
-    #
-    config = r'-l eng --oem 1 --psm 7'
-    text = pytesseract.image_to_string(cropped_images[i], config=config)
-    ## testing psm configs
-    print("\nPSM: 7")
-    print(text) 
-
-    #
-    config = r'-l eng --oem 1 --psm 13'
-    text = pytesseract.image_to_string(cropped_images[i], config=config)
-    ## testing psm configs
-    print("\nPSM: 13")
-    print(text)
-
-    result = reader.readtext(cropped_images[i])
-    for res in result:
-        print(res)
-
-
+# saves words found to a CSV file
 f = open("foundTextTest#1.csv", "a")
-f.write(text + "\n")
+f.write(F_text + "\n")
 f.close()
 
-text2 = '\n'.join([res[1] for res in result])
+# reprints the words found again
+text2 = '\n'.join([res[1] for res in resultFront])
 print(text2)

@@ -1,0 +1,14 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# NEED STARTING AT CHAPTER 8
+
+riley:
+  name: Riley Osborne
+  email: rwosborne@csustudent.net
+  password_digest: <%= User.digest('password') %>
+  admin: true
+
+mary:
+  name: Mary Inabinet
+  email: mlinabinet@futurewife.net
+  password_digest: <%= User.digest('password') %>

@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from easyocr import detection
 import pytesseract
+import time
 
 # Uses x,y,w,h coordinates to create a cropped image. 
 # The arguments are an image and array of coordinates, respectively
@@ -15,8 +16,18 @@ def coordinates_to_image(image, array):
     return new_image
 
 # calls the easyocr reader to find and return the OCR results for the image parameter (2nd) given.
-def easyocr_get_results(reader, img):
-    result = reader.readtext(img)
+# a blacklist is passed as an argument.
+def easyocr_get_results(reader, img, blacklist_pattern):
+    # blacklist certain characters
+    blacklist_special = ['\{}'.format(c) for c in '|[{]}']
+    additional_characters = ['\\']
+
+    # Combine special and additional characters then join into a single string
+    all_characters = blacklist_special + additional_characters
+    blacklist_pattern = ''.join(all_characters)
+    #print(blacklist_pattern)
+
+    result = reader.readtext(img, blocklist=blacklist_pattern)
 
     return result
 
@@ -65,7 +76,10 @@ def print_OCRresults(text_boxes, words, confidence_level):
 # Crops the images based off of EasyOCR's results, runs pytesseract on the cropped images,
 # displays the cropped images, and prints the pytesseract OCR results. Also re-runs easyocr on
 # the CROPPED version of the image and displays those results as well.
-def pytesseract_crop_and_display(reader, img, cropped_images, text_boxes, words):
+def pytesseract_crop_and_display(reader, img, cropped_images, text_boxes, words):   
+    # declare the timing variables as global to solve to issue of them not changing after the function completes
+    global time_cropped_easyocr, time_cropped_pytesseract 
+    
     # uses the words array to iterate through the found text
     for i in range ( len(words) ):
         # crops the images using the well set up bounding box coordinates stored in an array for each instance of text.
@@ -94,6 +108,7 @@ def pytesseract_crop_and_display(reader, img, cropped_images, text_boxes, words)
         #      consistent font and for materials like simple book pages.
         config = r'-l eng --oem 1 --psm 6'
         config += addFlags #add extra flags
+        pytesseract_time_start = time.time()    # start the time
         text = pytesseract.image_to_string(cropped_images[i], config=config)
         ## testing psm configs
         print("\nPSM: 6")
@@ -113,17 +128,41 @@ def pytesseract_crop_and_display(reader, img, cropped_images, text_boxes, words)
         config = r'-l eng --oem 1 --psm 13'
         config += addFlags #add extra flags
         text = pytesseract.image_to_string(cropped_images[i], config=config)
+        pytesseract_time_end = time.time()    # end the time
+
+        # add the time to the pytesseract ocr total time
+        pytesseract_elapsed = pytesseract_time_end - pytesseract_time_start
+        time_cropped_pytesseract = time_cropped_pytesseract + pytesseract_elapsed
+
         ## testing psm configs
         print("\nPSM: 13")
         print(text)
 
+        
         # re-run EasyOCR with the cropped images.
+        crop_easyocr_start = time.time()    # start easyOCR time
         result = reader.readtext(cropped_images[i])
+        crop_easyocr_end = time.time()    # end easyOCR time
+
+        #add the timing to total cropped easyOCR time
+        crop_easyocr_elapsed = crop_easyocr_end - crop_easyocr_start
+        time_cropped_easyocr = time_cropped_easyocr + crop_easyocr_elapsed
+        print("time pytesseract: " + str(pytesseract_elapsed))
+        print("time easyOCR: " + str(crop_easyocr_elapsed))
         for res in result:
             print(res)
 
+# first option has no gpu and the second option has gpu. Create the blacklist here too
+blacklist_special = ['\{}'.format(c) for c in '|[{]}']
+additional_characters = ['\\']
+
+# Combine special and additional characters then join into a single string
+all_characters = blacklist_special + additional_characters
+blacklist_pattern = ''.join(all_characters)
+#print(blacklist_pattern)
 
 reader = easyocr.Reader(['en'], gpu=False)
+#reader = easyocr.Reader(['en'], gpu=True)
 detection.CRAFT
 
 # the test-images folder is used so subdirectory maps to the image requested.
@@ -140,10 +179,18 @@ gray = cv2.cvtColor(imgF, cv2.COLOR_BGR2GRAY)
 kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
 sharp = cv2.filter2D(gray, -1, kernel)
 
-# call function to get results for the image front and back
-resultFront = easyocr_get_results(reader, imgF)
-#resultBack = easyocr_get_results(reader, imgB)
+# create all the timing variables and start timer
+time_cropped_easyocr = 0
+time_cropped_pytesseract = 0
+start_time = time.time()
 
+# call function to get results for the image front and back
+resultFront = easyocr_get_results(reader, imgF, blacklist_pattern)
+#resultBack = easyocr_get_results(reader, imgB, blacklist_pattern)
+
+# end timer
+end_time = time.time()
+elapsed_time = end_time - start_time
 
 ### These are the variables for the FRONT of the image
 F_text = ""
@@ -177,6 +224,11 @@ F_cropped_images = []
 # run the function that crops, displays, runs pytesseract, and re-runs EasyOCR for FRONT and BACK
 pytesseract_crop_and_display(reader, imgF, F_cropped_images, F_text_boxes, F_words)
 #pytesseract_crop_and_display(reader, imgB, B_cropped_images, B_text_boxes, B_words)
+
+# print times
+print("time to complete easyOCR for WHOLE image: " + str(elapsed_time))
+print("time to complete easyOCR for CROPPED images: " + str(time_cropped_easyocr))
+print("time to complete pytesseract for CROPPED images: " + str(time_cropped_pytesseract) + "\n")
 
 # saves words found to a CSV file
 f = open("foundTextTest#1.csv", "a")

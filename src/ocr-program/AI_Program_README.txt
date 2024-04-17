@@ -46,6 +46,7 @@ Pip commands needed for requirements (EasyOCR & Pytesseract):
     #pip install craft-text-detector
     pip install imutils
     #pip install torchvision==0.13.0
+    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
     # Download these two files:
     #    craft_mlt_25k.pth

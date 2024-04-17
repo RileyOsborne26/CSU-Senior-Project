@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for footballcard-app on 2024-02-26T15:32:57-05:00
+# fly.toml app configuration file generated for sample-app-riley on 2024-02-02T20:28:14-05:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -8,6 +8,9 @@ primary_region = 'atl'
 console_command = '/rails/bin/rails console'
 
 [build]
+
+[deploy]
+  release_command = './bin/rails db:prepare'
 
 [http_service]
   internal_port = 3000

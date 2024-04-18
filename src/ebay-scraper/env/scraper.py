@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import sys
 import csv
+import datetime as date
 
 # source URL: brightdata.com/blog/how-tos/how-to-scrape-ebay-in-python
 # Author: Riley Osborne
@@ -37,10 +38,12 @@ def print_set_products():
 
 # scrapes the sold listings, I will pass all the arrays and the soup as arguments
 def scrape_page(titles, prices, shipping, search_results, results_csvformat, listings_num):
-    search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li')
+    # all the sold listings contain the unique "data-viewport" attribute, which is used to scrape them all.
+    search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li', attrs={'data-viewport': True})
 
     # iterate only for the amount of search results returned
-    for i in range(listings_num):
+    for i in range(listings_num ):
+        print(i)
         item_title = search_results[i].find('div').find(class_='s-item__info clearfix').find('a').find('div').find('span').text
         titles.append(item_title)
         
@@ -250,7 +253,11 @@ elif results_num > 240:
 
 # This csv file will be used to check the results of the web scraping
 # create a "results.csv" if not present
-csv_file = open('results.csv', 'w', encoding='utf-8', newline='')
+output_file_dir = "results/"
+output_name = date.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+output_name = output_name + ".csv"    # add the file extension
+output_file = output_file_dir + output_name
+csv_file = open(output_file, 'w', encoding='utf-8', newline='')
 
 # initializing the writer object to insert data
 # in the CSV file
@@ -262,6 +269,12 @@ writer.writerow(['Name', 'Main Price', 'Shipping Cost'])
 # writing each row of the CSV
 for result in results_csvformat:
     writer.writerow(result.values())
+
+# add the link and search info to the end of the file for reference
+writer.writerow([url])
+full_name = first_name + last_name
+writer.writerow(['Year', 'Product', 'Player Name'])
+writer.writerow([year, product_set, full_name])
 
 # terminating the operation and releasing the resources
 csv_file.close()

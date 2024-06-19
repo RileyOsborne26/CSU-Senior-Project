@@ -6,6 +6,9 @@ from easyocr import detection
 import pytesseract
 import time
 
+print(cv2.__version__)
+print(pytesseract.get_tesseract_version())
+
 # Uses x,y,w,h coordinates to create a cropped image. 
 # The arguments are an image and array of coordinates, respectively
 # array in form [x,y,w,h]

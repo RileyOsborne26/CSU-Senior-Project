@@ -41,3 +41,40 @@ $ rails server
 
 For more information, see the
 [*Ruby on Rails Tutorial* book](https://www.railstutorial.org/book).
+
+
+## Setting up development PostgreSQL-16
+Sources: https://www.cherryservers.com/blog/install-postgresql-ubuntu-22-04
+
+To set up your development environment with PostgreSQL instal of sqlite, start with updating your system:
+
+```
+$ sudo  apt update
+$ sudo apt upgrade -y
+```
+
+We will be using the official repository method.
+Add the PostgreSQL repository:
+
+```
+$ sudo sh -c 'echo "deb https://apt.PostgreSQL.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+```
+
+Import the repository signing key:
+
+```
+$ wget --quiet -O - https://www.PostgreSQL.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+```
+
+Update your local package index:
+
+```
+$ sudo apt update
+```
+
+Install PostgreSQL v16:
+
+```
+$ sudo apt install postgresql-16 -y
+```
+

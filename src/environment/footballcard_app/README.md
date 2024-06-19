@@ -78,3 +78,58 @@ Install PostgreSQL v16:
 $ sudo apt install postgresql-16 -y
 ```
 
+Make sure to update the three lines to md5 in the file "/etc/postgresql/16/main/pg_hba.conf"
+
+## PostgreSQL Commands
+Use the following commands:
+
+Start
+```
+$ sudo service postgresql start
+or
+$ sudo systemctl start postgresql
+```
+
+Check status
+```
+$ sudo systemctl status postgresql
+```
+
+Check background
+```
+$ sudo ss -pnltu | grep 5432
+```
+
+Restart
+```
+$ sudo systemctl restart postgresql
+```
+
+Reload
+```
+$ sudo systemctl reload postgresql
+```
+
+Stop
+```
+$ sudo systemctl stop postgresql
+```
+
+Access postgresql user prompt
+```
+$ sudo -i -u postgres psql
+$ \q
+$ exit
+```
+
+## Other
+Watch the logs:
+```
+$ tail -f log/development.log
+```
+
+Log into the postgresql database:
+```
+$ sudo -i -u postgres
+$ psql -U riley -d footballcard_app_development
+```

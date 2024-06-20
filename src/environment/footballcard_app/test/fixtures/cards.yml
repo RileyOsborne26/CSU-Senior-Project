@@ -1,0 +1,69 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  card_id: 
+  year_id: MyString
+  player_id: MyString
+  team_id: MyString
+  position_id: MyString
+  set_id: MyString
+  card_number: MyString
+  is_serial_numbered: false
+  print_run: 1
+  serial_number: 1
+  parallel_color: MyString
+  parallel_type: MyString
+  is_autographed: false
+  is_dual_auto: false
+  auto_ink_color: 1
+  is_graded: false
+  grading_company: 1
+  grade_id: MyString
+  grade_number: 1
+  corners_subgrade_number: 1
+  surface_subgrade_number: 1
+  edges_subgrade_number: 1
+  centering_subgrade_number: 1
+  subset_id: MyString
+  is_case_hit: false
+  is_memorabilia: false
+  memorabilia_type: 1
+  memorabilia_pieces_number: 1
+  is_booklet: false
+  printing_plate: 1
+  is_mini: false
+  sport_id: MyString
+
+two:
+  card_id: 
+  year_id: MyString
+  player_id: MyString
+  team_id: MyString
+  position_id: MyString
+  set_id: MyString
+  card_number: MyString
+  is_serial_numbered: false
+  print_run: 1
+  serial_number: 1
+  parallel_color: MyString
+  parallel_type: MyString
+  is_autographed: false
+  is_dual_auto: false
+  auto_ink_color: 1
+  is_graded: false
+  grading_company: 1
+  grade_id: MyString
+  grade_number: 1
+  corners_subgrade_number: 1
+  surface_subgrade_number: 1
+  edges_subgrade_number: 1
+  centering_subgrade_number: 1
+  subset_id: MyString
+  is_case_hit: false
+  is_memorabilia: false
+  memorabilia_type: 1
+  memorabilia_pieces_number: 1
+  is_booklet: false
+  printing_plate: 1
+  is_mini: false
+  sport_id: MyString

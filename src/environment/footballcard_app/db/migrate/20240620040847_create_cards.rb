@@ -1,6 +1,6 @@
 class CreateCards < ActiveRecord::Migration[7.0]
   def change
-    create_table :cards do |t|
+    create_table :cards, id: false do |t|
       t.primary_key :card_id
       t.string :year_id, limit: 7
       t.string :player_id, limit: 50

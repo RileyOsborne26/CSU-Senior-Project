@@ -1,9 +1,9 @@
-class CreateOwnerHistories < ActiveRecord::Migration[7.0]
+class CreateOwnedCards < ActiveRecord::Migration[7.0]
   def change
-    create_table :owner_histories do |t|
+    create_table :owned_cards, id: false do |t|
       t.primary_key :user_card_id
-      t.references :user_id, null: false, foreign_key: true
-      t.references :card_id, null: false, foreign_key: true
+      t.references :user, null: false, foreign_key: { to_table: :users, primary_key: :user_id }
+      t.references :card, null: false, foreign_key: { to_table: :cards, primary_key: :card_id }
       t.boolean :ownership_status
       t.datetime :date_created
       t.decimal :entry_market_value, precision: 10, scale: 2

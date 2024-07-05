@@ -36,6 +36,19 @@ def print_set_products():
     for i in SUPPORTED_SETS:
         print(i + ", ")
 
+# trims the price data going into the results
+def format_price(main_price):
+    return main_price.strip("$") 
+
+# trims the shipping data going into the results
+def format_shipping(ship_price):
+    # special case for free shipping listings
+    if ship_price == "Free shipping":
+        return "0"
+    else:
+        # make shipping price a number ONLY string
+        return ship_price.strip('+$ shipping') 
+    
 # scrapes the sold listings, I will pass all the arrays and the soup as arguments
 def scrape_page(titles, prices, shipping, search_results, results_csvformat, listings_num):
     # all the sold listings contain the unique "data-viewport" attribute, which is used to scrape them all.
@@ -50,8 +63,20 @@ def scrape_page(titles, prices, shipping, search_results, results_csvformat, lis
         # temp prices is used here to hold the price, type of listing (# of bids, best offer, or buy it now), and the shipping cost
         # this is because the html is not different enough to ignore the type of listing unless there are tools out there that I am missing. This gets the job done though
         temp_prices = search_results[i].find('div').find(class_='s-item__info clearfix').find(class_='s-item__details clearfix').find_all('div', class_='s-item__detail s-item__detail--primary')
+        
+        # using a for loop through the temp_prices to ensure I get the correct span for shipping!!!
+        for price in temp_prices:
+            shipping_span = price.find('span', class_='s-item__shipping s-item__logisticsCost')
+            if shipping_span:
+                ship_price = shipping_span.text
+                break
+        
         main_price = temp_prices[0].find('span').find('span').text
-        ship_price = temp_prices[2].find('span').text
+
+        # format prices AND shipping
+        main_price = format_price(main_price)
+        ship_price = format_shipping(ship_price)
+
         prices.append(main_price)
         shipping.append(ship_price)
 

@@ -49,8 +49,24 @@ def format_shipping(ship_price):
         # make shipping price a number ONLY string
         return ship_price.strip('+$ shipping') 
     
+# trims the date and puts it in the preferred format
+def format_selling_date(sold_date_string):
+    # strip the sold date of any characters not adding to the date value
+    sold_date_string = sold_date_string.strip('Sold ')
+
+    # remove the comma from the date to ensure fluidity in converting to date object
+    sold_date_string = sold_date_string.replace(',', '')
+
+    # convert string to date object format
+    sold_date = datetime.strptime(sold_date_string, '%b %d %Y').date()
+    sold_date_string = datetime.strftime(sold_date, '%m-%d-%Y')     # converting back to a string with desired date form
+    sold_date = datetime.strptime(sold_date_string, '%m-%d-%Y').date()     # converting back to date object with desired date form
+
+    # turn string into the date object
+    return sold_date
+    
 # scrapes the sold listings, I will pass all the arrays and the soup as arguments
-def scrape_page(titles, prices, shipping, search_results, results_csvformat, listings_num):
+def scrape_page(sold_dates, titles, prices, shipping, search_results, results_csvformat, listings_num):
     # all the sold listings contain the unique "data-viewport" attribute, which is used to scrape them all.
     search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li', attrs={'data-viewport': True})
 
@@ -64,6 +80,9 @@ def scrape_page(titles, prices, shipping, search_results, results_csvformat, lis
         # this is because the html is not different enough to ignore the type of listing unless there are tools out there that I am missing. This gets the job done though
         temp_prices = search_results[i].find('div').find(class_='s-item__info clearfix').find(class_='s-item__details clearfix').find_all('div', class_='s-item__detail s-item__detail--primary')
         
+        # get the item sold date
+        sold_date_string = search_results[i].find('div').find(class_='s-item__info clearfix').find(class_='s-item__caption').find('div').find('span').text
+
         # using a for loop through the temp_prices to ensure I get the correct span for shipping!!!
         for price in temp_prices:
             shipping_span = price.find('span', class_='s-item__shipping s-item__logisticsCost')
@@ -73,16 +92,20 @@ def scrape_page(titles, prices, shipping, search_results, results_csvformat, lis
         
         main_price = temp_prices[0].find('span').find('span').text
 
-        # format prices AND shipping
+        # format date AND price AND shipping
+        sold_date = format_selling_date(sold_date_string)
         main_price = format_price(main_price)
         ship_price = format_shipping(ship_price)
 
+        # add the results to their arrays
+        sold_dates.append(sold_date)
         prices.append(main_price)
         shipping.append(ship_price)
 
         # put it into the csv dictionary form
         results_csvformat.append(
             {
+                'date': sold_date,
                 'name': item_title,
                 'main price': main_price,
                 'shipping price': ship_price
@@ -248,7 +271,8 @@ soup = BeautifulSoup(page.text, 'html.parser')
 # scraping logic
 print('scraping logic')
 
-# arrays to hold the titles and prices. search results holds all the returned listings
+# arrays to hold the date, titles, and prices. search results holds all the returned listings
+sold_dates = []
 search_results = []
 titles = []
 prices = []
@@ -272,9 +296,9 @@ print(results_num)
 
 # scrape the page depending on the number of results gotten
 if results_num > 0 and results_num <= 240:
-    scrape_page(titles, prices, shipping, search_results, results_csvformat, results_num)
+    scrape_page(sold_dates, titles, prices, shipping, search_results, results_csvformat, results_num)
 elif results_num > 240:
-    scrape_page(titles, prices, shipping, search_results, results_csvformat, 240)
+    scrape_page(sold_dates, titles, prices, shipping, search_results, results_csvformat, 240)
 
 # This csv file will be used to check the results of the web scraping
 # create a "results.csv" if not present
@@ -289,7 +313,7 @@ csv_file = open(output_file, 'w', encoding='utf-8', newline='')
 writer = csv.writer(csv_file)
 
 # writing the header of the CSV file
-writer.writerow(['Name', 'Main Price', 'Shipping Cost'])
+writer.writerow(['Sold Date', 'Name', 'Main Price', 'Shipping Cost'])
 
 # writing each row of the CSV
 for result in results_csvformat:

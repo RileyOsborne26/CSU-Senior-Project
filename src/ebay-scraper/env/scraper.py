@@ -1,9 +1,20 @@
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+import datetime
+from dateutil.relativedelta import relativedelta
 import sys
 import csv
-import datetime as date
+
+# ToC
+### User input & URL manipulation - Line 142
+### Web Scraping - Line 285
+### Card Pricing Functionality - Line 357
+
+##### TESTING BLOCK for new code (up at the beginning of the program)
+
+
+#####
+
 
 # source URL: brightdata.com/blog/how-tos/how-to-scrape-ebay-in-python
 # Author: Riley Osborne
@@ -38,16 +49,16 @@ def print_set_products():
 
 # trims the price data going into the results
 def format_price(main_price):
-    return main_price.strip("$") 
+    return float( main_price.strip("$") )    #cast to float after making it all numbers
 
 # trims the shipping data going into the results
 def format_shipping(ship_price):
     # special case for free shipping listings
     if ship_price == "Free shipping":
-        return "0"
+        return float( '0' )
     else:
-        # make shipping price a number ONLY string
-        return ship_price.strip('+$ shipping') 
+        # make shipping price a number ONLY string and then cast to float precision 2
+        return float( ship_price.strip('+$ shipping') )
     
 # trims the date and puts it in the preferred format
 def format_selling_date(sold_date_string):
@@ -58,15 +69,19 @@ def format_selling_date(sold_date_string):
     sold_date_string = sold_date_string.replace(',', '')
 
     # convert string to date object format
-    sold_date = datetime.strptime(sold_date_string, '%b %d %Y').date()
-    sold_date_string = datetime.strftime(sold_date, '%m-%d-%Y')     # converting back to a string with desired date form
-    sold_date = datetime.strptime(sold_date_string, '%m-%d-%Y').date()     # converting back to date object with desired date form
+    sold_date = datetime.datetime.strptime(sold_date_string, '%b %d %Y').date()
+    sold_date_string = datetime.datetime.strftime(sold_date, '%m-%d-%Y')     # converting back to a string with desired date form
+    sold_date = datetime.datetime.strptime(sold_date_string, '%m-%d-%Y').date()     # converting back to date object with desired date form
 
     # turn string into the date object
     return sold_date
     
+# combines the shipping and price for a total listing price    
+def get_listing_price(main_price, ship_price):
+    return round((main_price + ship_price), 2)
+
 # scrapes the sold listings, I will pass all the arrays and the soup as arguments
-def scrape_page(sold_dates, titles, prices, shipping, search_results, results_csvformat, listings_num):
+def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, listings_num):
     # all the sold listings contain the unique "data-viewport" attribute, which is used to scrape them all.
     search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li', attrs={'data-viewport': True})
 
@@ -97,10 +112,14 @@ def scrape_page(sold_dates, titles, prices, shipping, search_results, results_cs
         main_price = format_price(main_price)
         ship_price = format_shipping(ship_price)
 
+        # get the total price for the listing
+        total_price = get_listing_price(main_price, ship_price)
+
         # add the results to their arrays
         sold_dates.append(sold_date)
         prices.append(main_price)
         shipping.append(ship_price)
+        total_prices.append(total_price)
 
         # put it into the csv dictionary form
         results_csvformat.append(
@@ -108,13 +127,14 @@ def scrape_page(sold_dates, titles, prices, shipping, search_results, results_cs
                 'date': sold_date,
                 'name': item_title,
                 'main price': main_price,
-                'shipping price': ship_price
+                'shipping price': ship_price,
+                'listing price' : total_price
             }
         )
     print("scrape_page function not complete")
 
 # get the current year for user input validation
-currentYear = datetime.now().year
+currentYear = datetime.datetime.now().year
 
 # keep the number of arguments
 argCount = len(sys.argv)
@@ -277,6 +297,7 @@ search_results = []
 titles = []
 prices = []
 shipping = []
+total_prices = []
 
 # used to input results into a csv for checking
 results_csvformat = []
@@ -296,14 +317,14 @@ print(results_num)
 
 # scrape the page depending on the number of results gotten
 if results_num > 0 and results_num <= 240:
-    scrape_page(sold_dates, titles, prices, shipping, search_results, results_csvformat, results_num)
+    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, results_num)
 elif results_num > 240:
-    scrape_page(sold_dates, titles, prices, shipping, search_results, results_csvformat, 240)
+    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, 240)
 
 # This csv file will be used to check the results of the web scraping
 # create a "results.csv" if not present
 output_file_dir = "results/"
-output_name = date.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+output_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 output_name = output_name + ".csv"    # add the file extension
 output_file = output_file_dir + output_name
 csv_file = open(output_file, 'w', encoding='utf-8', newline='')
@@ -313,7 +334,7 @@ csv_file = open(output_file, 'w', encoding='utf-8', newline='')
 writer = csv.writer(csv_file)
 
 # writing the header of the CSV file
-writer.writerow(['Sold Date', 'Name', 'Main Price', 'Shipping Cost'])
+writer.writerow(['Sold Date', 'Name', 'Main Price', 'Shipping Cost', 'Listing Total'])
 
 # writing each row of the CSV
 for result in results_csvformat:
@@ -332,4 +353,23 @@ csv_file.close()
 #search_results = soup.find('div', id='srp-river-results').find('ul', class_='srp-results srp-list clearfix')####.find_all('li', class_='s-item s-item__before-answer s-item__pl-on-bottom')
 soup.find_next('li', attrs={'data-viewport': True})
 
-# this line gets the last listing on the page
+
+#### Card Pricing Functionality ####
+# date variables for pricing and date object operations
+current_date = datetime.date.today()
+
+year_interval = current_date - relativedelta(years=1)
+six_month_interval = current_date - relativedelta(months=6)
+three_month_interval = current_date - relativedelta(months=3)
+month_interval = current_date - relativedelta(months=1)
+week_interval = current_date - relativedelta(days=7)
+day_interval = current_date - relativedelta(days=1)
+
+# TESTING date format and relative accuracy
+print(datetime.datetime.strftime(current_date, '%m-%d-%Y') + " - today")
+print(datetime.datetime.strftime(day_interval, '%m-%d-%Y') + " - day ago")
+print(datetime.datetime.strftime(week_interval, '%m-%d-%Y') + " - week ago")
+print(datetime.datetime.strftime(month_interval, '%m-%d-%Y') + " - month ago")
+print(datetime.datetime.strftime(three_month_interval, '%m-%d-%Y') + " - 3 months ago")
+print(datetime.datetime.strftime(six_month_interval, '%m-%d-%Y') + " - 6 months ago")
+print(datetime.datetime.strftime(year_interval, '%m-%d-%Y') + " - year ago")

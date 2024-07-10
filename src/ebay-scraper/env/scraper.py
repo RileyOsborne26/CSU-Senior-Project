@@ -22,21 +22,15 @@ import csv
 # list of product sets currently supported in the web scraping script
 SUPPORTED_SETS = ["Donruss", "Donruss Optic", "Prizm", "Panini Prizm", "Score", "Mosaic", "Chronicles", "Panini Chronicles",
                    "Phoenix", "Torque", "Panini Torque", "Contenders", "Panini Contenders"]
+
+# list of sports currently supported
+SUPPORTED_SPORTS = ["Baseball", "Basketball", "Football", "Nascar"]
  
 # The grading companies array and url string have been replaced by the superior "&Grade"" url piece
 #######                   
 ## list of card grading companies. List will be used for narrowing seaches excluding graded cards and searches including specific grading companies
-#GRADING_COMPANIES = ["CSG", "PSA", "BGS", "SGC", "HGA"]               
-
-## string to be used for search queries excluding graded cards
-#gradersString = ""
-
-## create final version of gradersString for URL
-#for i in GRADING_COMPANIES:
-# gradersString = gradersString + "-" + i + "+"
-
-## take off the extra "+" at the end of the string    
-#gradersString = gradersString[0:-1]
+## Even though there is a Graded bit in the URL, this will be used for exclusion because it isn't perfect
+GRADING_COMPANIES = ["CSG", "PSA", "BGS", "SGC", "HGA"]               
 #######
     
 
@@ -46,6 +40,56 @@ def print_set_products():
     print("\nSupported sets: ")
     for i in SUPPORTED_SETS:
         print(i + ", ")
+
+# prints a menu of the sports for the user to choose
+def print_sports_list():
+    print("\nSports Menu:")
+    count = 0
+    for i in SUPPORTED_SPORTS:
+        print("[" + str(count) + "] " + i)
+        count += 1
+
+# get parallel colors list for the given SET + SPORT + YEAR in hopes of narrowing down search
+def get_parallel_colors_list(set_name, sport_index, year):
+    print(set_name)
+    print(sport_index)
+    print(year)
+    # check the options
+    if (set_name == "Donruss" and sport_index == 2 and year == "2018"):
+        return ["blue", "green", "red", "silver", "gold", "black"]
+    else:
+        # return empty list if set+sport+year is not supported
+        print("We are sorry, your card does not yet have a parallel colors list")
+        return []
+    
+
+# get parallel types list for the given SET + SPORT + YEAR in hopes of narrowing down search
+def get_parallel_types_list(set_name, sport_index, year):
+    # check the options
+    if (set_name == "Donruss" and sport_index == 2 and year == "2018"):
+        return ["studio series", "prime", "nfl shield", "nfl player's logo", "brand logo", "aqueous test", "stat line", "jersey number", "press proof", "press proof die-cut", "holo"]
+    else:
+        # return empty list if set+sport+year is not supported
+        print("We are sorry, your card does not yet have a parallel types list")
+        return []
+
+# print the parallel colors list
+def print_parallel_colors(parallel_colors):
+    # print the list passed to the function
+    count = 0
+    print("\nParallel Colors List:")
+    for i in parallel_colors:
+        print("[" + str(count) + "] " + i)
+        count += 1
+
+# print the parallel types list
+def print_parallel_types(parallel_types):
+    # print the list passed to the function
+    count = 0
+    print("\nParallel Types List:")
+    for i in parallel_types:
+        print("[" + str(count) + "] " + i)
+        count += 1
 
 # trims the price data going into the results
 def format_price(main_price):
@@ -136,6 +180,20 @@ def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_resul
 # get the current year for user input validation
 currentYear = datetime.datetime.now().year
 
+# get the sport of the card from the user and validate input
+print_sports_list()
+invalid = True
+
+while invalid: 
+    sport = input("Enter your card's sport name from the list: ")
+    count = 0
+    for i in SUPPORTED_SPORTS:
+        if i == sport:
+            sport_index = count
+            invalid = False
+        else:
+            count += 1
+
 # keep the number of arguments
 argCount = len(sys.argv)
 
@@ -172,14 +230,6 @@ else:
 while(product_set not in SUPPORTED_SETS):
     print("Invalid or unsupported product set name. Please try again.")
     product_set = input("Enter in the card product set name: ")
-
-# tweak the product set variable for the url once the input is validified
-product_set = product_set.replace(" ", "+")
-
-# SPECIAL CHECK: add a "-optic" and "-elite" component to the product_set variable to improve search results.
-# it differentiates the "Donruss" search results from the "Donruss Optic" search results.
-if(product_set == "Donruss"):
-    product_set = "Donruss+-optic+-elite"
 
 ### get first name
 if(argCount < 4):
@@ -218,25 +268,113 @@ if isGraded == "y":
 else:
     gradedUrlBit = "d=No"
 
+    ## add the url part that excludes listings with the name of the grading company in the title
+    ## string to be used for search queries excluding graded cards
+    gradersString = ""
+
+    ## create final version of gradersString for URL
+    for i in GRADING_COMPANIES:
+        gradersString = gradersString + "-" + i + "+"
+
+    # take off the extra "+" at the end of the string    
+    gradersString = gradersString[0:-1]
+
 
 
 # other detailed variables to implement later
 isAuto = "0"
 isParallel = "0"
 parallelColor = "0"
+parallelType = "0"
 isNumbered = "0"
 printRun = "0"
 
 # ask if the card is a parallel
+isParallel = input("\nIs the card a parallel (y/n): ")
+
+# validate user input
+while(isParallel != "y" and isParallel != "n"):
+    print("Invalid input. Please try again.")
+    isParallel = input("Is the card a parallel (y/n): ")
+
+# get the card's parallel color and type if user input is yes, if not then the set information is still gathered
+set_parallel_colors = []
+set_parallel_types = []
+
+# get the array of parallel options for the given card
+# this was moved outside of the if statement for URL term excluding
+set_parallel_colors = get_parallel_colors_list(product_set, sport_index, year)
+set_parallel_types = get_parallel_types_list(product_set, sport_index, year)
+
+# handle when the user says the card has a parallel
+if isParallel == "y":
+    # a variable to ensure that if isParallel is set to yes that at least one parallel attribute is assigned (color or type)
+    invalid_isParallel = True
+
+    # ask user if they want to input a parallel type
+    print_parallel_types(set_parallel_types)
+    parallelType = input("\nAssign card a parallel type from list? (y/n): ")
+
+    # validate user input
+    while(parallelType != "y" and parallelType != "n"):
+        print("Invalid input. Please try again.")
+        parallelType = input("Assign card a parallel type from list? (y/n): ")
+
+    # take input to determine how to handle parallelType
+    if parallelType == "y":
+        # parallel attribute will be set, so isParallel is set correctly
+        invalid_isParallel = False
+
+        # get parallel type from user and validate input
+        while(parallelType not in set_parallel_types):
+            parallelType = input("Enter in a card parallel type from the list: ")
+    # no else bc subtracting types from the search query not always wise will reset to zero before creating url
+
+    # ask user if they want to input a parallel color
+    print_parallel_colors(set_parallel_colors)
+    parallelColor = input("\nAssign card a parallel color from list? (y/n): ")
+
+    # validate user input
+    while(parallelColor != "y" and parallelColor != "n"):
+        print("Invalid input. Please try again.")
+        parallelColor = input("Assign card a parallel color from list? (y/n): ")
+
+    # check that a parallel attribute was or will be actually set, or isParallel will change to "n"
+    if parallelColor == "n" and invalid_isParallel == True:
+        isParallel = "n"
 
 
-# get the card's parallel color and type if user input is yes
+# take input to determine how to handle parallelColor
+# had to bump it out of the conditional so I can use the excluded terms despite the value of "isParallel"
+if parallelColor == "y":
+    # parallel attribute will be set, so isParallel is set correctly
+    invalid_isParallel = False
+
+    # get parallel color from user and validate input
+    while(parallelColor not in set_parallel_colors):
+        parallelColor = input("Enter in a card parallel color from the list: ")
+
+    ### TO DO: exclude color terms that were NOT set to be parallelColor
+else:
+    # since no, create the url part that will exclude listings with color names in the title
+    ## string to be used for search queries excluding parallelColor
+    colorsString = ""
+
+    ## create final version of colorsString for URL
+    for i in set_parallel_colors:
+        # check for spaces and alternate URL format accordingly if found
+        if i.find(" ") != -1:
+            temp_i = i.replace(" ", "+")
+            colorsString = colorsString + "-\"" + temp_i + "\"+"
+        else:
+            colorsString = colorsString + "-" + i + "+"
+
+    # take off the extra "+" at the end of the string    
+    colorsString = colorsString[0:-1]
 
 
 # if no then add colors to exclude from the url
 
-
-# verify all information before scraping???
 
 # if there are no CLI parameters
 if len(sys.argv) < 1:
@@ -266,15 +404,52 @@ while (confirm == "n" or confirm == "N"):
     # confirm user selections
     confirm = input("Confirm your search parameter? (y/n): ")
 
+#### variable format tweaking section for url manipulation
 # reconstruct user parameters for URL
 userAdditions = userAdditions.replace(" ", "+")
+
+# tweak the product set variable for the url because the input is validified
+product_set = product_set.replace(" ", "+")
+
+# tweak the parallel COLOR and TYPE variables for the url because the input is validified
+parallelColor = parallelColor.replace(" ", "+")
+parallelType = parallelType.replace(" ", "+")
+
+# Change isParallel to "-parallel" if == n. Search results are worse for "+parallel"
+if isParallel == "n":
+    isParallel = "-parallel"
+else:
+    isParallel = "0"
+
+# Change isGraded to "0" if yes so it will reset, or to a string of excluded grading companies if no.
+if isGraded == "n":
+    isGraded = gradersString
+else:
+    isGraded = "0"
+
+# Change parallelColor to exclude the colors if it is still == "n" or if we found a list of colors to exclude
+colors_length = len(set_parallel_colors)
+
+if parallelColor == "n" or parallelColor == "0":
+    parallelColor = colorsString
+
+# Change parallelColor back to "0" if == "n"
+if parallelType == "n":
+    parallelType = "0"
+
+###TO DO: change isAuto to "auto" if == y, else switch back to "0"
+
+# SPECIAL CHECK: add a "-optic" and "-elite" component to the product_set variable to improve search results.
+# it differentiates the "Donruss" search results from the "Donruss Optic" search results.
+if(product_set == "Donruss"):
+    product_set = "Donruss+-optic+-elite+-clearly"
 
 # set to 0 if the user did not add to the parameters
 if (len(userAdditions) < 1):
     userAdditions = 0
 
 # building the url for ebay sold data
-url = f'https://www.ebay.com/sch/i.html?_nkw={year}+{product_set}+{first_name}+{last_name}+{userAdditions}+{isRookie}+{isAuto}+{isParallel}+{parallelColor}+{isNumbered}+{printRun}&Grade{gradedUrlBit}&_sacat=0&type=s&_dcat=261328&LH_Complete=1&LH_Sold=1&_ipg=240'
+url = f'https://www.ebay.com/sch/i.html?_nkw={year}+{product_set}+{first_name}+{last_name}+{userAdditions}+{isGraded}+{isRookie}+{isAuto}+{isParallel}+{parallelType}+{parallelColor}+{isNumbered}+{printRun}&Grade{gradedUrlBit}&_sacat=0&type=s&_dcat=261328&LH_Complete=1&LH_Sold=1&_ipg=240'
 
 # take out all unset values
 url = url.replace("+0", "")

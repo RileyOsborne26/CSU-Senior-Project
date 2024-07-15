@@ -124,6 +124,14 @@ def format_selling_date(sold_date_string):
 def get_listing_price(main_price, ship_price):
     return round((main_price + ship_price), 2)
 
+# get the oldest completed selling date for a card
+def get_oldest_sold_date(sold_dates, index):
+    return sold_dates[index - 1]
+
+# get the most recent completed selling date for a card
+def get_newest_sold_date():
+    return sold_dates[0]
+
 # scrapes the sold listings, I will pass all the arrays and the soup as arguments
 def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, listings_num):
     # all the sold listings contain the unique "data-viewport" attribute, which is used to scrape them all.
@@ -490,11 +498,15 @@ results_num = soup.find('div', 'srp-controls__control srp-controls__count').find
 results_num = int(results_num)    # make it an integer
 print(results_num)
 
+# this variable will be used to eliminate a magic number and for some array indexing during card pricing
+adjusted_results_num = results_num
+
 # scrape the page depending on the number of results gotten
 if results_num > 0 and results_num <= 240:
     scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, results_num)
 elif results_num > 240:
-    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, 240)
+    adjusted_results_num = 240
+    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, adjusted_results_num)
 
 # This csv file will be used to check the results of the web scraping
 # create a "results.csv" if not present
@@ -548,3 +560,44 @@ print(datetime.datetime.strftime(month_interval, '%m-%d-%Y') + " - month ago")
 print(datetime.datetime.strftime(three_month_interval, '%m-%d-%Y') + " - 3 months ago")
 print(datetime.datetime.strftime(six_month_interval, '%m-%d-%Y') + " - 6 months ago")
 print(datetime.datetime.strftime(year_interval, '%m-%d-%Y') + " - year ago")
+
+# get the endpoints of the range of sold card data gathered (oldest and most recent)
+last_sold_date = get_newest_sold_date()
+oldest_sold_date = get_oldest_sold_date(sold_dates, adjusted_results_num)
+
+print("sold data range endpoints: ")
+print(str(last_sold_date) + " " + str(total_prices[adjusted_results_num - 1]))
+print(str(oldest_sold_date) + " " + str(total_prices[0]))
+
+### testing out prices
+total_prices_sum = 0
+
+for i in total_prices:
+    total_prices_sum += float( i )
+
+total_prices_average = total_prices_sum / adjusted_results_num
+
+if adjusted_results_num > 9:
+    temp_adj = adjusted_results_num - 5
+    first_five = total_prices[temp_adj:adjusted_results_num]
+    last_five = total_prices[0:5]
+
+first_five_sum = 0
+for i in first_five:
+    first_five_sum += i
+    print(i)
+
+first_five_avg = first_five_sum / 5
+
+print("gap")
+
+last_five_sum = 0
+for i in last_five:
+    last_five_sum += i
+    print(i)
+
+last_five_avg = last_five_sum / 5
+
+print("newest five average: " + str(last_five_avg))
+print("oldest five average: " + str(first_five_avg))
+print("Average total: " + str(total_prices_average))

@@ -552,6 +552,10 @@ month_interval = current_date - relativedelta(months=1)
 week_interval = current_date - relativedelta(days=7)
 day_interval = current_date - relativedelta(days=1)
 
+# most important intervals
+thirty_days_interval = current_date - relativedelta(days=30)
+sixty_days_interval = current_date - relativedelta(days=60)
+
 # TESTING date format and relative accuracy
 print(datetime.datetime.strftime(current_date, '%m-%d-%Y') + " - today")
 print(datetime.datetime.strftime(day_interval, '%m-%d-%Y') + " - day ago")
@@ -575,8 +579,10 @@ total_prices_sum = 0
 for i in total_prices:
     total_prices_sum += float( i )
 
+# calculate the total average price
 total_prices_average = total_prices_sum / adjusted_results_num
 
+# if there are more than 9 items sold then get average price for oldest and newest 5 items sold
 if adjusted_results_num > 9:
     temp_adj = adjusted_results_num - 5
     first_five = total_prices[temp_adj:adjusted_results_num]
@@ -601,3 +607,41 @@ last_five_avg = last_five_sum / 5
 print("newest five average: " + str(last_five_avg))
 print("oldest five average: " + str(first_five_avg))
 print("Average total: " + str(total_prices_average))
+
+# my pricing strategy will be to calculate the price based off what I can figure out about the
+# sold dates. In order not to bog down the system, I will look at the sold dates data as analytically
+# as possible without getting in depth with the details, and figure out where to go with price calculation
+# based off what I was able to deduce on the sold dates data.
+oldest_sold_date = sold_dates[(len(sold_dates) - 1)]    # get the oldest sold date of an item
+newest_sold_date = sold_dates[0]
+dt_current_from_oldest = current_date - oldest_sold_date    # timedelta of the amount of days since the oldest sold date
+
+# convert timedelta to integer
+current_from_oldest = dt_current_from_oldest.days
+
+print("Oldest sold date: " + str( oldest_sold_date ))
+print("Newest sold date: " + str( newest_sold_date ))
+print("Days since oldest sold date: " + str( current_from_oldest ))
+
+# counting variables for determining what time intervals the sold items fall into
+newest_count = 0
+middle_count = 0
+oldest_count = 0
+
+# count what range the sold items fall into
+for i in sold_dates:
+    #
+    if i >= thirty_days_interval:
+        newest_count += 1
+    elif i < thirty_days_interval and i >= sixty_days_interval:
+        middle_count += 1
+    else:
+        oldest_count += 1
+
+print("New count: " + str( newest_count ))
+print("Mid count: " + str( middle_count ))
+print("Old count: " + str( oldest_count ))
+
+# get the average number of cards sold per day
+avg_sold_per_day = len(sold_dates) / current_from_oldest
+print("avg sold per day: " + str( avg_sold_per_day ))

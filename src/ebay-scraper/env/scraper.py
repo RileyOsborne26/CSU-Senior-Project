@@ -556,6 +556,9 @@ day_interval = current_date - relativedelta(days=1)
 thirty_days_interval = current_date - relativedelta(days=30)
 sixty_days_interval = current_date - relativedelta(days=60)
 
+# variable to hold the current price
+current_value = 0
+
 # TESTING date format and relative accuracy
 print(datetime.datetime.strftime(current_date, '%m-%d-%Y') + " - today")
 print(datetime.datetime.strftime(day_interval, '%m-%d-%Y') + " - day ago")
@@ -628,6 +631,8 @@ newest_count = 0
 middle_count = 0
 oldest_count = 0
 
+# counting variables for the amount of cards sold within a certain amount of days
+
 # count what range the sold items fall into
 for i in sold_dates:
     #
@@ -645,3 +650,35 @@ print("Old count: " + str( oldest_count ))
 # get the average number of cards sold per day
 avg_sold_per_day = len(sold_dates) / current_from_oldest
 print("avg sold per day: " + str( avg_sold_per_day ))
+
+# get the average number of cards sold last 30 days
+avg_sold_last_thirty = newest_count / thirty_days_interval
+print("avg num sold per day in the last 30 days: " + str( avg_sold_last_thirty ))
+
+# handle pricing differently according to the avg_sold_newest first. The if statements use ratio = (cards sold/every 7 days)
+# note, IF the current pricing is underperforming, then next build can use EMA and dig deeper into some of the data
+if avg_sold_last_thirty < (1/7):    # 1/7 is one sale a week
+    current_value = total_prices[0]
+elif avg_sold_last_thirty >= (1/7) and avg_sold_last_thirty <= (2/7):    # interval for 5-8 avg sold in last 30 days
+    current_value_sum = total_prices[0] + total_prices[1]
+
+    # using last x amount sold method
+    current_value = current_value_sum / 2
+elif avg_sold_last_thirty > (2/7) and avg_sold_last_thirty <= (3/7):     # interval for 9-12 avg sold in last 30 days
+    current_value_sum = total_prices[0] + total_prices[1] + total_prices[2]
+
+    # using last x amount sold method
+    current_value = current_value_sum / 3
+elif avg_sold_last_thirty > (3/7) and avg_sold_last_thirty <= (4/7):     # interval for 13-17 avg sold in last 30 days
+    
+    
+    current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3]
+    current_value = current_value_sum / 4
+elif avg_sold_last_thirty > (4/7) and avg_sold_last_thirty <= (5/7):     # past 3 days
+    current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3] + total_prices[4]
+    current_value = current_value_sum / 5
+elif avg_sold_last_thirty > (5/7) and avg_sold_last_thirty <= (6/7):     # past 2 days
+    current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3] + total_prices[4] + total_prices[5]
+    current_value = current_value_sum / 6
+elif avg_sold_last_thirty > (6/7) and avg_sold_last_thirty <= (7/7):
+    current_value = 0

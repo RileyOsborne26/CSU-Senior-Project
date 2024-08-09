@@ -133,12 +133,12 @@ def get_newest_sold_date():
     return sold_dates[0]
 
 # scrapes the sold listings, I will pass all the arrays and the soup as arguments
-def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, listings_num):
+def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, listings_num):
     # all the sold listings contain the unique "data-viewport" attribute, which is used to scrape them all.
     search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li', attrs={'data-viewport': True})
 
     # iterate only for the amount of search results returned
-    for i in range(listings_num ):
+    for i in range(listings_num):
         print(i)
         item_title = search_results[i].find('div').find(class_='s-item__info clearfix').find('a').find('div').find('span').text
         titles.append(item_title)
@@ -173,6 +173,23 @@ def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_resul
         shipping.append(ship_price)
         total_prices.append(total_price)
 
+# passes the results_csvformat array and all five arrays of info for output in dictionary form
+# This was originally done in scrape_page() but was moved to help sort the results first with selection_sort_scraped_results()
+def scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shipping, total_prices):
+    # check that the arrays are the same length
+    if len(sold_dates) != len(sold_dates) != len(titles) != len(prices) != len(shipping) != len(total_prices):
+        print("ERROR: You are missing data from your ebay scraping results. The arrays are not all the same length.")
+        exit(1)   #exit program with the error message
+
+    # create a dictionary to combine all the array results into one place. MAKE SURE EVERYTHING IS SORTED!!!
+    for i in range(len(sold_dates)):
+        # get all the data for the dictionary in one place
+        sold_date = sold_dates[i]
+        item_title = titles[i]
+        main_price = prices[i]
+        ship_price = shipping[i]
+        total_price = total_prices[i]
+
         # put it into the csv dictionary form
         results_csvformat.append(
             {
@@ -183,8 +200,63 @@ def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_resul
                 'listing price' : total_price
             }
         )
-    print("scrape_page function not complete")
 
+    # This csv file will be used to check the results of the web scraping
+    # create a "results.csv" if not present
+    output_file_dir = "results/"
+    output_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_name = output_name + ".csv"    # add the file extension
+    output_file = output_file_dir + output_name
+    csv_file = open(output_file, 'w', encoding='utf-8', newline='')
+
+    # initializing the writer object to insert data
+    # in the CSV file
+    writer = csv.writer(csv_file)
+
+    # writing the header of the CSV file
+    writer.writerow(['Sold Date', 'Name', 'Main Price', 'Shipping Cost', 'Listing Total'])
+
+    # writing each row of the CSV
+    for result in results_csvformat:
+        writer.writerow(result.values())
+
+    # add the link and search info to the end of the file for reference
+    writer.writerow([url])
+    full_name = first_name + last_name
+    writer.writerow(['Year', 'Product', 'Player Name'])
+    writer.writerow([year, product_set, full_name])
+
+    # terminating the operation and releasing the resources
+    csv_file.close()
+
+    print("SUCCESS: web scraping to CSV function")
+
+
+# This is a sort to fix Ebay's poor job of sorting listings by date with their "ended recently" filter
+# This function ensures the appropriate changes are made to all the arrays & not just the sold dates array.
+# the first parameter is the main array getting selection sorted, with the other arrays being parallel.
+def selection_sort_scraped_results(sold_dates, titles, prices, shipping, total_prices):
+    # sort variables
+    sort = 0
+    idx = 0
+    primary_size = len(sold_dates)
+    temp = 0
+
+    # start sorting, if array is length 10, 10th item is 9th index
+    for sort in range(primary_size - 1):
+        min_idx = sort
+
+        for idx in range(sort + 1, primary_size):
+            if sold_dates[idx] < sold_dates[min_idx]:
+                min_idx = idx
+        
+        # start swapping with the primary array 
+
+
+    print("INCOMPLETE: Ebay sold listings were sorted by date.")
+
+
+###
 # get the current year for user input validation
 currentYear = datetime.datetime.now().year
 
@@ -288,7 +360,6 @@ else:
     gradersString = gradersString[0:-1]
 
 
-
 # other detailed variables to implement later
 isAuto = "0"
 isParallel = "0"
@@ -363,6 +434,7 @@ if parallelColor == "y":
         parallelColor = input("Enter in a card parallel color from the list: ")
 
     ### TO DO: exclude color terms that were NOT set to be parallelColor
+    ###
 else:
     # since no, create the url part that will exclude listings with color names in the title
     ## string to be used for search queries excluding parallelColor
@@ -445,7 +517,9 @@ if parallelColor == "n" or parallelColor == "0":
 if parallelType == "n":
     parallelType = "0"
 
+
 ###TO DO: change isAuto to "auto" if == y, else switch back to "0"
+###
 
 # SPECIAL CHECK: add a "-optic" and "-elite" component to the product_set variable to improve search results.
 # it differentiates the "Donruss" search results from the "Donruss Optic" search results.
@@ -503,42 +577,24 @@ adjusted_results_num = results_num
 
 # scrape the page depending on the number of results gotten
 if results_num > 0 and results_num <= 240:
-    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, results_num)
+    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_num)
 elif results_num > 240:
     adjusted_results_num = 240
-    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_csvformat, adjusted_results_num)
+    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, adjusted_results_num)
+else:
+    print("ERROR: we could not find any sold data for your card, so pricing is not yet supported.")
+    exit(1)   # exit if there are no results for the card
 
-# This csv file will be used to check the results of the web scraping
-# create a "results.csv" if not present
-output_file_dir = "results/"
-output_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-output_name = output_name + ".csv"    # add the file extension
-output_file = output_file_dir + output_name
-csv_file = open(output_file, 'w', encoding='utf-8', newline='')
 
-# initializing the writer object to insert data
-# in the CSV file
-writer = csv.writer(csv_file)
+### TO-DO: sort your results arrays before outputing to CSV file and pricing below!!!
+selection_sort_scraped_results()
 
-# writing the header of the CSV file
-writer.writerow(['Sold Date', 'Name', 'Main Price', 'Shipping Cost', 'Listing Total'])
-
-# writing each row of the CSV
-for result in results_csvformat:
-    writer.writerow(result.values())
-
-# add the link and search info to the end of the file for reference
-writer.writerow([url])
-full_name = first_name + last_name
-writer.writerow(['Year', 'Product', 'Player Name'])
-writer.writerow([year, product_set, full_name])
-
-# terminating the operation and releasing the resources
-csv_file.close()
+# create csv file and add results to it
+scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shipping, total_prices)
 
 # add all the listings minus the last one on the pages into the results array
 #search_results = soup.find('div', id='srp-river-results').find('ul', class_='srp-results srp-list clearfix')####.find_all('li', class_='s-item s-item__before-answer s-item__pl-on-bottom')
-soup.find_next('li', attrs={'data-viewport': True})
+#soup.find_next('li', attrs={'data-viewport': True})
 
 
 #### Card Pricing Functionality ####
@@ -651,34 +707,56 @@ print("Old count: " + str( oldest_count ))
 avg_sold_per_day = len(sold_dates) / current_from_oldest
 print("avg sold per day: " + str( avg_sold_per_day ))
 
-# get the average number of cards sold last 30 days
-avg_sold_last_thirty = newest_count / thirty_days_interval
+# get the average number of cards sold last 30 days (convert datetime.date to int)
+avg_sold_last_thirty = newest_count / (current_date - thirty_days_interval).days
 print("avg num sold per day in the last 30 days: " + str( avg_sold_last_thirty ))
 
 # handle pricing differently according to the avg_sold_newest first. The if statements use ratio = (cards sold/every 7 days)
 # note, IF the current pricing is underperforming, then next build can use EMA and dig deeper into some of the data
 if avg_sold_last_thirty < (1/7):    # 1/7 is one sale a week
     current_value = total_prices[0]
-elif avg_sold_last_thirty >= (1/7) and avg_sold_last_thirty <= (2/7):    # interval for 5-8 avg sold in last 30 days
+elif avg_sold_last_thirty >= (1/7) and avg_sold_last_thirty <= (3/7):  # interval for 5-12 avg sold in last 30 days
     current_value_sum = total_prices[0] + total_prices[1]
 
     # using last x amount sold method
     current_value = current_value_sum / 2
-elif avg_sold_last_thirty > (2/7) and avg_sold_last_thirty <= (3/7):     # interval for 9-12 avg sold in last 30 days
+elif avg_sold_last_thirty > (3/7) and avg_sold_last_thirty <= (4/7):   # interval for 13-17 avg sold in last 30 days
     current_value_sum = total_prices[0] + total_prices[1] + total_prices[2]
 
     # using last x amount sold method
     current_value = current_value_sum / 3
-elif avg_sold_last_thirty > (3/7) and avg_sold_last_thirty <= (4/7):     # interval for 13-17 avg sold in last 30 days
-    
-    
+elif avg_sold_last_thirty > (4/7) and avg_sold_last_thirty <= (6/7):   # interval for 18-25 avg sold in last 30 days    
     current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3]
+
+    # using last x amount sold method
     current_value = current_value_sum / 4
-elif avg_sold_last_thirty > (4/7) and avg_sold_last_thirty <= (5/7):     # past 3 days
+elif avg_sold_last_thirty > (6/7) and avg_sold_last_thirty <= (8/7):   # interval for 26-34 avg sold in last 30 days
     current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3] + total_prices[4]
+    
+    # using last x amount sold method
     current_value = current_value_sum / 5
-elif avg_sold_last_thirty > (5/7) and avg_sold_last_thirty <= (6/7):     # past 2 days
-    current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3] + total_prices[4] + total_prices[5]
-    current_value = current_value_sum / 6
-elif avg_sold_last_thirty > (6/7) and avg_sold_last_thirty <= (7/7):
-    current_value = 0
+elif avg_sold_last_thirty > (8/7) and avg_sold_last_thirty <= (11/7):   # interval for 35-47 avg sold in last 30 days
+    
+    ### FIX ME
+    # use the last 4 days (+1 for running in early morning) of sales method
+    current_value = 0.8700117
+    ###
+elif avg_sold_last_thirty > (11/7) and avg_sold_last_thirty <= (15/7):   # interval for 48-64 avg sold in last 30 days
+    
+    ### FIX ME
+    # use the last 3 days (+1 for running in early morning) of sales method
+    current_value = 0.1170157
+    ###
+elif avg_sold_last_thirty > (15/7) and avg_sold_last_thirty * 3 <= 80:   # interval for 65-80 avg sold in last 30 days
+    
+    ### FIX ME
+    # use the last 2 days (+1 for running in early morning) of sales method
+    current_value = 0.157080
+    ###
+else:
+    ### FIX ME
+    # use the last day (+1 for running in early morning) of sales method
+    current_value = 0.999
+    ###
+
+print("Current value: " + str( current_value ))

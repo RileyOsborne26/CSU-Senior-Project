@@ -240,20 +240,41 @@ def selection_sort_scraped_results(sold_dates, titles, prices, shipping, total_p
     sort = 0
     idx = 0
     primary_size = len(sold_dates)
-    temp = 0
+    temp_sold = 0
+    temp_title = ""
+    temp_price = 0
+    temp_ship = 0
+    temp_total = 0
 
     # start sorting, if array is length 10, 10th item is 9th index
     for sort in range(primary_size - 1):
-        min_idx = sort
+        newest_idx = sort
 
         for idx in range(sort + 1, primary_size):
-            if sold_dates[idx] < sold_dates[min_idx]:
-                min_idx = idx
+            if sold_dates[idx] > sold_dates[newest_idx]:
+                newest_idx = idx
         
         # start swapping with the primary array 
+        temp_sold = sold_dates[sort]
+        sold_dates[sort] = sold_dates[newest_idx]
+        sold_dates[newest_idx] = temp_sold
+
+        # swap for the parallel arrays as well
+        temp_title = titles[sort]
+        temp_price = prices[sort]
+        temp_ship = shipping[sort]
+        temp_total = total_prices[sort]
+        titles[sort] = titles[newest_idx]
+        titles[newest_idx] = temp_title
+        prices[sort] = prices[newest_idx]
+        prices[newest_idx] = temp_price
+        shipping[sort] = shipping[newest_idx]
+        shipping[newest_idx] = temp_ship
+        total_prices[sort] = total_prices[newest_idx]
+        total_prices[newest_idx] = temp_total
 
 
-    print("INCOMPLETE: Ebay sold listings were sorted by date.")
+    print("**COMPLETE: Ebay sold listings were sorted by date.")
 
 
 ###
@@ -587,7 +608,7 @@ else:
 
 
 ### TO-DO: sort your results arrays before outputing to CSV file and pricing below!!!
-selection_sort_scraped_results()
+selection_sort_scraped_results(sold_dates, titles, prices, shipping, total_prices)
 
 # create csv file and add results to it
 scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shipping, total_prices)

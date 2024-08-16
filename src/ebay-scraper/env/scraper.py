@@ -276,7 +276,23 @@ def selection_sort_scraped_results(sold_dates, titles, prices, shipping, total_p
 
     print("**COMPLETE: Ebay sold listings were sorted by date.")
 
+# return the number of sold listings for the x amount of past days
+# the first parameter is the dates sold list, second being the days you want to count into the past. Third parameter is current date.
+# the function assumes the array is sorted
+def sold_in_range(sold_dates, num_days, current_date):
+    # variable for counting listings number
+    listing_count = 0
+    idx = 0
+    
+    # current date - the date in the array gives a number of days for the gap. Make sure it is in range of num_days.
+    while (current_date - sold_dates[idx]).days <= num_days:
+        # if the date is valid, increase listing count and index
+        listing_count += 1
+        idx += 1
 
+    return listing_count
+
+    
 ###
 # get the current year for user input validation
 currentYear = datetime.datetime.now().year
@@ -725,6 +741,7 @@ print("Mid count: " + str( middle_count ))
 print("Old count: " + str( oldest_count ))
 
 # get the average number of cards sold per day
+# LIKELY to get skewed from results over 90 days. Not essential to project atm.
 avg_sold_per_day = len(sold_dates) / current_from_oldest
 print("avg sold per day: " + str( avg_sold_per_day ))
 
@@ -757,27 +774,48 @@ elif avg_sold_last_thirty > (6/7) and avg_sold_last_thirty <= (8/7):   # interva
     # using last x amount sold method
     current_value = current_value_sum / 5
 elif avg_sold_last_thirty > (8/7) and avg_sold_last_thirty <= (11/7):   # interval for 35-47 avg sold in last 30 days
+    # use the last 4 days of sales method
+    current_value_sum = 0
+    sold_count = sold_in_range(sold_dates, 4, current_date)    # get the number of sold listings
+    print("days count for interval: 4 & " + str(sold_count) + " results")
+
+    # add the values together
+    for idx in range(sold_count):
+        current_value_sum += total_prices[idx]
     
-    ### FIX ME
-    # use the last 4 days (+1 for running in early morning) of sales method
-    current_value = 0.8700117
-    ###
+    current_value = current_value_sum / sold_count
 elif avg_sold_last_thirty > (11/7) and avg_sold_last_thirty <= (15/7):   # interval for 48-64 avg sold in last 30 days
+    # use the last 3 days of sales method
+    current_value_sum = 0
+    sold_count = sold_in_range(sold_dates, 3, current_date)    # get the number of sold listings
+    print("days count for interval: 3 & " + str(sold_count) + " results")
+
+    # add the values together
+    for idx in range(sold_count):
+        current_value_sum += total_prices[idx]
     
-    ### FIX ME
-    # use the last 3 days (+1 for running in early morning) of sales method
-    current_value = 0.1170157
-    ###
+    current_value = current_value_sum / sold_count
 elif avg_sold_last_thirty > (15/7) and avg_sold_last_thirty * 3 <= 80:   # interval for 65-80 avg sold in last 30 days
+    # use the last 2 days of sales method
+    current_value_sum = 0
+    sold_count = sold_in_range(sold_dates, 2, current_date)    # get the number of sold listings
+    print("days count for interval: 2 & " + str(sold_count) + " results")
+
+    # add the values together
+    for idx in range(sold_count):
+        current_value_sum += total_prices[idx]
     
-    ### FIX ME
-    # use the last 2 days (+1 for running in early morning) of sales method
-    current_value = 0.157080
-    ###
+    current_value = current_value_sum / sold_count
 else:
-    ### FIX ME
-    # use the last day (+1 for running in early morning) of sales method
-    current_value = 0.999
-    ###
+    # use the last day of sales method
+    current_value_sum = 0
+    sold_count = sold_in_range(sold_dates, 1, current_date)    # get the number of sold listings
+    print("days count for interval: 1 & " + str(sold_count) + " results")
+
+    # add the values together
+    for idx in range(sold_count):
+        current_value_sum += total_prices[idx]
+    
+    current_value = current_value_sum / sold_count
 
 print("Current value: " + str( current_value ))

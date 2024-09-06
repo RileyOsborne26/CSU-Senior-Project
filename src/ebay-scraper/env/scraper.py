@@ -4,6 +4,8 @@ import datetime
 from dateutil.relativedelta import relativedelta
 import sys
 import csv
+import webbrowser #used to open the url-manipulated url automatically.
+import os
 
 # ToC
 ### User input & URL manipulation - Line 142
@@ -106,11 +108,13 @@ def format_shipping(ship_price):
     
 # trims the date and puts it in the preferred format
 def format_selling_date(sold_date_string):
-    # strip the sold date of any characters not adding to the date value
-    sold_date_string = sold_date_string.strip('Sold ')
+    # Remove "Sold " from the string result by using substrings 
+    sold_date_string = sold_date_string[6:]
+    print("TROUBLESHOOT (2): " + sold_date_string)
 
     # remove the comma from the date to ensure fluidity in converting to date object
     sold_date_string = sold_date_string.replace(',', '')
+    print("TROUBLESHOOT (3): " + sold_date_string)
 
     # convert string to date object format
     sold_date = datetime.datetime.strptime(sold_date_string, '%b %d %Y').date()
@@ -149,6 +153,7 @@ def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_resul
         
         # get the item sold date
         sold_date_string = search_results[i].find('div').find(class_='s-item__info clearfix').find(class_='s-item__caption').find('div').find('span').text
+        print("TROUBLESHOOT (1): " + sold_date_string)
 
         # using a for loop through the temp_prices to ensure I get the correct span for shipping!!!
         for price in temp_prices:
@@ -574,6 +579,8 @@ url = f'https://www.ebay.com/sch/i.html?_nkw={year}+{product_set}+{first_name}+{
 url = url.replace("+0", "")
 print(url)
 
+# open the web url
+webbrowser.open_new(url)
 
 # request to download the webpage from the url we made
 page = requests.get(url)

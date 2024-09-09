@@ -58,6 +58,8 @@ def get_parallel_colors_list(set_name, sport_index, year):
     # check the options
     if (set_name == "Donruss" and sport_index == 2 and year == "2018"):
         return ["blue", "green", "red", "silver", "gold", "black"]
+    elif (set_name == "Panini Prizm" and sport_index == 2 and year == "2019"):
+        return ["silver", "orange", "blue", "green", "neon green", "pink", "red", "red white blue", "purple", "gold", "black"]
     else:
         # return empty list if set+sport+year is not supported
         print("We are sorry, your card does not yet have a parallel colors list")
@@ -68,7 +70,10 @@ def get_parallel_colors_list(set_name, sport_index, year):
 def get_parallel_types_list(set_name, sport_index, year):
     # check the options
     if (set_name == "Donruss" and sport_index == 2 and year == "2018"):
-        return ["studio series", "prime", "nfl shield", "nfl player's logo", "brand logo", "aqueous test", "stat line", "jersey number", "press proof", "press proof die-cut", "holo"]
+        # removed "nfl" from player's logo and from shield.
+        return ["studio series", "prime", "shield", "player's logo", "brand logo", "aqueous test", "stat line", "jersey number", "press proof", "press proof die-cut", "holo"]
+    elif (set_name == "Panini Prizm" and sport_index == 2 and year == "2019"):
+        return ["shimmer", "sparkle", "wave", "scope", "power", "vinyl", "finite", "ice", "hyper", "disco", "lazer", "camo"]
     else:
         # return empty list if set+sport+year is not supported
         print("We are sorry, your card does not yet have a parallel types list")
@@ -109,11 +114,9 @@ def format_shipping(ship_price):
 def format_selling_date(sold_date_string):
     # Remove "Sold " from the string result by using substrings 
     sold_date_string = sold_date_string[6:]
-    print("TROUBLESHOOT (2): " + sold_date_string)
 
     # remove the comma from the date to ensure fluidity in converting to date object
     sold_date_string = sold_date_string.replace(',', '')
-    print("TROUBLESHOOT (3): " + sold_date_string)
 
     # convert string to date object format
     sold_date = datetime.datetime.strptime(sold_date_string, '%b %d %Y').date()
@@ -152,7 +155,6 @@ def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_resul
         
         # get the item sold date
         sold_date_string = search_results[i].find('div').find(class_='s-item__info clearfix').find(class_='s-item__caption').find('div').find('span').text
-        print("TROUBLESHOOT (1): " + sold_date_string)
 
         # using a for loop through the temp_prices to ensure I get the correct span for shipping!!!
         for price in temp_prices:
@@ -448,7 +450,7 @@ if isParallel == "y":
         # get parallel type from user and validate input
         while(parallelType not in set_parallel_types):
             parallelType = input("Enter in a card parallel type from the list: ")
-    # no else bc subtracting types from the search query not always wise will reset to zero before creating url
+    # no else bc subtracting types from the search query is not always wise will reset to zero before creating url
 
     # ask user if they want to input a parallel color
     print_parallel_colors(set_parallel_colors)
@@ -462,7 +464,22 @@ if isParallel == "y":
     # check that a parallel attribute was or will be actually set, or isParallel will change to "n"
     if parallelColor == "n" and invalid_isParallel == True:
         isParallel = "n"
+else:
+    parallelType = "n" # make sure to set parallelType to "n" if it isn't even a parallel
 
+
+# take input to determine how to handle parallelType
+if parallelType == "n":
+    typesString = ""
+
+    # make the url exclude the parallel type terms
+    for i in set_parallel_types:
+        # check for spaces and alternate URL format accordingly if found
+        if i.find(" ") != -1:
+            temp_i = i.replace(" ", "+-")
+            typesString = typesString + "-" + temp_i + "+" #had to take out double quotes bc I was having an error when opening the browser window.
+        else:
+            typesString = typesString + "-" + i + "+"
 
 # take input to determine how to handle parallelColor
 # had to bump it out of the conditional so I can use the excluded terms despite the value of "isParallel"
@@ -485,8 +502,8 @@ else:
     for i in set_parallel_colors:
         # check for spaces and alternate URL format accordingly if found
         if i.find(" ") != -1:
-            temp_i = i.replace(" ", "+")
-            colorsString = colorsString + "-\"" + temp_i + "\"+"
+            temp_i = i.replace(" ", "+-")
+            colorsString = colorsString + "-" + temp_i + "+" #had to take out double quotes bc I was having an error when opening the browser window.
         else:
             colorsString = colorsString + "-" + i + "+"
 
@@ -556,7 +573,8 @@ if parallelColor == "n" or parallelColor == "0":
 
 # Change parallelColor back to "0" if == "n"
 if parallelType == "n":
-    parallelType = "0"
+    parallelType = typesString
+    #parallelType = "0"
 
 
 ###TO DO: change isAuto to "auto" if == y, else switch back to "0"
@@ -613,7 +631,7 @@ results_csvformat = []
 # get the number of search results!!!
 results_num = soup.find('div', 'srp-controls__control srp-controls__count').find_next('span', class_='BOLD').text
 results_num = int(results_num)    # make it an integer
-print(results_num)
+print("Results Number: " + str( results_num ))
 
 # this variable will be used to eliminate a magic number and for some array indexing during card pricing
 adjusted_results_num = results_num

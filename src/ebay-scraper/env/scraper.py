@@ -60,6 +60,8 @@ def get_parallel_colors_list(set_name, sport_index, year):
         return ["blue", "green", "red", "silver", "gold", "black"]
     elif (set_name == "Panini Prizm" and sport_index == 2 and year == "2019"):
         return ["silver", "orange", "blue", "green", "neon green", "pink", "red", "red white blue", "purple", "gold", "black"]
+    elif (set_name == "Score" and sport_index == 2 and year == "2016"):
+        return []
     else:
         # return empty list if set+sport+year is not supported
         print("We are sorry, your card does not yet have a parallel colors list")
@@ -74,6 +76,8 @@ def get_parallel_types_list(set_name, sport_index, year):
         return ["studio series", "prime", "shield", "player's logo", "brand logo", "aqueous test", "stat line", "jersey number", "press proof", "press proof die-cut", "holo"]
     elif (set_name == "Panini Prizm" and sport_index == 2 and year == "2019"):
         return ["shimmer", "sparkle", "wave", "scope", "power", "vinyl", "finite", "ice", "hyper", "disco", "lazer", "camo"]
+    elif (set_name == "Score" and sport_index == 2 and year == "2016"):
+        return []
     else:
         # return empty list if set+sport+year is not supported
         print("We are sorry, your card does not yet have a parallel types list")
@@ -139,9 +143,15 @@ def get_newest_sold_date():
     return sold_dates[0]
 
 # scrapes the sold listings, I will pass all the arrays and the soup as arguments
-def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, listings_num):
+def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, listing_formats, listings_num):
     # all the sold listings contain the unique "data-viewport" attribute, which is used to scrape them all.
     search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li', attrs={'data-viewport': True})
+
+    print("###")
+    print(len(search_results))
+    print(listings_num)
+    print(range(listings_num))
+    print("###")
 
     # iterate only for the amount of search results returned
     for i in range(listings_num):
@@ -163,7 +173,9 @@ def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_resul
                 ship_price = shipping_span.text
                 break
         
+        # single out the div that contains the price without shipping from the temp price array
         main_price = temp_prices[0].find('span').find('span').text
+        listing_type = temp_prices[1].find('span').text # this does the same thing as main price for the listing type
 
         # format date AND price AND shipping
         sold_date = format_selling_date(sold_date_string)
@@ -178,10 +190,11 @@ def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_resul
         prices.append(main_price)
         shipping.append(ship_price)
         total_prices.append(total_price)
+        listing_formats.append(listing_type)
 
 # passes the results_csvformat array and all five arrays of info for output in dictionary form
 # This was originally done in scrape_page() but was moved to help sort the results first with selection_sort_scraped_results()
-def scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shipping, total_prices):
+def scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shipping, total_prices, listing_formats):
     # check that the arrays are the same length
     if len(sold_dates) != len(sold_dates) != len(titles) != len(prices) != len(shipping) != len(total_prices):
         print("ERROR: You are missing data from your ebay scraping results. The arrays are not all the same length.")
@@ -195,6 +208,7 @@ def scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shippin
         main_price = prices[i]
         ship_price = shipping[i]
         total_price = total_prices[i]
+        listing_format = listing_formats[i]
 
         # put it into the csv dictionary form
         results_csvformat.append(
@@ -203,7 +217,8 @@ def scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shippin
                 'name': item_title,
                 'main price': main_price,
                 'shipping price': ship_price,
-                'listing price' : total_price
+                'listing price' : total_price,
+                'listing format' : listing_format
             }
         )
 
@@ -220,7 +235,7 @@ def scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shippin
     writer = csv.writer(csv_file)
 
     # writing the header of the CSV file
-    writer.writerow(['Sold Date', 'Name', 'Main Price', 'Shipping Cost', 'Listing Total'])
+    writer.writerow(['Sold Date', 'Name', 'Main Price', 'Shipping Cost', 'Listing Total', 'Listing Type'])
 
     # writing each row of the CSV
     for result in results_csvformat:
@@ -609,13 +624,14 @@ soup = BeautifulSoup(page.text, 'html.parser')
 # scraping logic
 print('scraping logic')
 
-# arrays to hold the date, titles, and prices. search results holds all the returned listings
+# arrays to hold the date, titles, listing formats (auction, buy it now), and prices. search results holds all the returned listings
 sold_dates = []
 search_results = []
 titles = []
 prices = []
 shipping = []
 total_prices = []
+listing_formats = []
 
 # used to input results into a csv for checking
 results_csvformat = []
@@ -630,18 +646,21 @@ results_csvformat = []
 
 # get the number of search results!!!
 results_num = soup.find('div', 'srp-controls__control srp-controls__count').find_next('span', class_='BOLD').text
+print("***")
+print(results_num)
 results_num = int(results_num)    # make it an integer
 print("Results Number: " + str( results_num ))
+print("***")
 
 # this variable will be used to eliminate a magic number and for some array indexing during card pricing
 adjusted_results_num = results_num
 
 # scrape the page depending on the number of results gotten
 if results_num > 0 and results_num <= 240:
-    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, results_num)
+    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, listing_formats, results_num)
 elif results_num > 240:
     adjusted_results_num = 240
-    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, adjusted_results_num)
+    scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, listing_formats, adjusted_results_num)
 else:
     print("ERROR: we could not find any sold data for your card, so pricing is not yet supported.")
     exit(1)   # exit if there are no results for the card
@@ -651,7 +670,7 @@ else:
 selection_sort_scraped_results(sold_dates, titles, prices, shipping, total_prices)
 
 # create csv file and add results to it
-scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shipping, total_prices)
+scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shipping, total_prices, listing_formats)
 
 # add all the listings minus the last one on the pages into the results array
 #search_results = soup.find('div', id='srp-river-results').find('ul', class_='srp-results srp-list clearfix')####.find_all('li', class_='s-item s-item__before-answer s-item__pl-on-bottom')

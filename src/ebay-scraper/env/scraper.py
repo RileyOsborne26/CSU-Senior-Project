@@ -709,8 +709,8 @@ last_sold_date = get_newest_sold_date()
 oldest_sold_date = get_oldest_sold_date(sold_dates, adjusted_results_num)
 
 print("sold data range endpoints: ")
-print(str(last_sold_date) + " " + str(total_prices[adjusted_results_num - 1]))
-print(str(oldest_sold_date) + " " + str(total_prices[0]))
+print(str(oldest_sold_date) + " " + str(total_prices[adjusted_results_num - 1]))
+print(str(last_sold_date) + " " + str(total_prices[0]))
 
 ### testing out prices
 total_prices_sum = 0
@@ -819,46 +819,133 @@ elif avg_sold_last_thirty > (6/7) and avg_sold_last_thirty <= (8/7):   # interva
 elif avg_sold_last_thirty > (8/7) and avg_sold_last_thirty <= (11/7):   # interval for 35-47 avg sold in last 30 days
     # use the last 4 days of sales method
     current_value_sum = 0
-    sold_count = sold_in_range(sold_dates, 4, current_date)    # get the number of sold listings
+    days_to_search = 4   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
+    sold_count = sold_in_range(sold_dates, days_to_search, current_date)    # get the number of sold listings
     print("days count for interval: 4 days & " + str(sold_count) + " results")
 
-    # add the values together
-    for idx in range(sold_count):
-        current_value_sum += total_prices[idx]
-    
-    current_value = round((current_value_sum / sold_count), 2)
+    #using if statements to catch edge cases where the sold count is outside the expected range. 
+    if (sold_count == 0): 
+        #set price to last sold if no results are found for the days_to_search
+        current_value = total_prices[0]
+    #(8/7)*the number of days to get sold data represents the minimum amount of expected returned listings in the range. Sold_count should be in that range and if it is BELOW then we will fix that here.
+    elif (sold_count < ((8/7)*days_to_search)):
+        #get the values normally first
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+
+        #add the next value not counted to help with the lack of data
+        current_value_sum += total_prices[sold_count]
+        current_value = round((current_value_sum / (sold_count + 1)), 2)
+    #(11/7)*the number of days to get sold data represents the max amount of expected returned listings in the range. Sold_count should be in that range and if it is ABOVE then we will fix that here.
+    elif (sold_count > ((11/7)*days_to_search)):
+        #get the values normally first
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+        
+        #subtract the oldest value counted to focus the average price with the newest data
+        current_value_sum -= total_prices[sold_count - 1]
+        current_value = round((current_value_sum / (sold_count - 1)), 2)
+    else: #do the normal calculation if the edge cases are not met.
+        # add the values together
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+        
+        current_value = round((current_value_sum / sold_count), 2)
 elif avg_sold_last_thirty > (11/7) and avg_sold_last_thirty <= (15/7):   # interval for 48-64 avg sold in last 30 days
     # use the last 3 days of sales method
     current_value_sum = 0
-    sold_count = sold_in_range(sold_dates, 3, current_date)    # get the number of sold listings
+    days_to_search = 3   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
+    sold_count = sold_in_range(sold_dates, days_to_search, current_date)    # get the number of sold listings
     print("days count for interval: 3 days & " + str(sold_count) + " results")
 
-    # add the values together
-    for idx in range(sold_count):
-        current_value_sum += total_prices[idx]
-    
-    current_value = round((current_value_sum / sold_count), 2)
-elif avg_sold_last_thirty > (15/7) and avg_sold_last_thirty * 3 <= 80:   # interval for 65-80 avg sold in last 30 days
+    #using if statements to catch edge cases where the sold count is outside the expected range. 
+    if (sold_count == 0): 
+        #set price to last sold if no results are found for the days_to_search
+        current_value = total_prices[0]
+    #(11/7)*the number of days to get sold data represents the minimum amount of expected returned listings in the range. Sold_count should be in that range and if it is BELOW then we will fix that here.
+    elif (sold_count < ((11/7)*days_to_search)):
+        #get the values normally first
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+
+        #add the next value not counted to help with the lack of data
+        current_value_sum += total_prices[sold_count]
+        current_value = round((current_value_sum / (sold_count + 1)), 2)
+    #(15/7)*the number of days to get sold data represents the max amount of expected returned listings in the range. Sold_count should be in that range and if it is ABOVE then we will fix that here.
+    elif (sold_count > ((15/7)*days_to_search)):
+        #get the values normally first
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+        
+        #subtract the oldest value counted to focus the average price with the newest data
+        current_value_sum -= total_prices[sold_count - 1]
+        current_value = round((current_value_sum / (sold_count - 1)), 2)
+    else: #do the normal calculation if the edge cases are not met.
+        # add the values together
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+        
+        current_value = round((current_value_sum / sold_count), 2)
+elif avg_sold_last_thirty > (15/7) and avg_sold_last_thirty * 30 <= 80:   # interval for 65-80 avg sold in last 30 days. 80 was chose because the results are limited to the past 90 days or 240 total. 240/3=80listings and 90/3=30days
     # use the last 2 days of sales method
     current_value_sum = 0
-    sold_count = sold_in_range(sold_dates, 2, current_date)    # get the number of sold listings
+    days_to_search = 2   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
+    sold_count = sold_in_range(sold_dates, days_to_search, current_date)    # get the number of sold listings
     print("days count for interval: 2 days & " + str(sold_count) + " results")
 
-    # add the values together
-    for idx in range(sold_count):
-        current_value_sum += total_prices[idx]
-    
-    current_value = round((current_value_sum / sold_count), 2)
+    #using if statements to catch edge cases where the sold count is outside the expected range. 
+    if (sold_count == 0): 
+        #set price to last sold if no results are found for the days_to_search
+        current_value = total_prices[0]
+    #(15/7)*the number of days to get sold data represents the minimum amount of expected returned listings in the range. Sold_count should be in that range and if it is BELOW then we will fix that here.
+    elif (sold_count < ((15/7)*days_to_search)):
+        #get the values normally first
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+
+        #add the next value not counted to help with the lack of data
+        current_value_sum += total_prices[sold_count]
+        current_value = round((current_value_sum / (sold_count + 1)), 2)
+    #(80/30)*the number of days to get sold data represents the max amount of expected returned listings in the range. Sold_count should be in that range and if it is ABOVE then we will fix that here.
+    elif (sold_count > ((80/30)*days_to_search)):
+        #get the values normally first
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+        
+        #subtract the oldest value counted to focus the average price with the newest data
+        current_value_sum -= total_prices[sold_count - 1]
+        current_value = round((current_value_sum / (sold_count - 1)), 2)
+    else: #do the normal calculation if the edge cases are not met.
+        # add the values together
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+        
+        current_value = round((current_value_sum / sold_count), 2)
 else:
     # use the last day of sales method
     current_value_sum = 0
-    sold_count = sold_in_range(sold_dates, 1, current_date)    # get the number of sold listings
+    days_to_search = 1   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
+    sold_count = sold_in_range(sold_dates, days_to_search, current_date)    # get the number of sold listings
     print("days count for interval: 1 day(s) & " + str(sold_count) + " results")
 
-    # add the values together
-    for idx in range(sold_count):
-        current_value_sum += total_prices[idx]
-    
-    current_value = round((current_value_sum / sold_count), 2)
+    #check edge cases with conditionals
+    if (sold_count == 0): 
+        #set price to last sold if no results are found for the days_to_search
+        current_value = total_prices[0]
+    #(80/30)*the number of days to get sold data represents the minimum amount of expected returned listings in the range. Sold_count should be in that range and if it is BELOW then we will fix that here.
+    elif (sold_count < ((80/30)*days_to_search)):
+        #get the values normally first
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+
+        #add the next value not counted to help with the lack of data
+        current_value_sum += total_prices[sold_count]
+        current_value = round((current_value_sum / (sold_count + 1)), 2)
+    else:
+        # add the values together
+        for idx in range(sold_count):
+            current_value_sum += total_prices[idx]
+        
+        current_value = round((current_value_sum / sold_count), 2)
 
 print("Current value: " + str( current_value ))

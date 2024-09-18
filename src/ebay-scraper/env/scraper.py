@@ -142,6 +142,19 @@ def get_oldest_sold_date(sold_dates, index):
 def get_newest_sold_date():
     return sold_dates[0]
 
+# for each listing that is "Best offer accepted", this function uses web scraping from sellers overview hub to find the actual best offer that a card sold for. Sold items advanced search does not actually provide this value, hence this function.
+def find_true_price(sold_dates, titles, prices, shipping, total_prices, listing_formats, listings_num):
+    actual_price = 0
+
+    #find listings that have "Best offer accepted" as their type.
+    for i in range(listings_num):
+        #check the listing type
+        if (listing_formats[i] == "Best offer accepted"):
+            print("find_true_price() IN PROGRESS")
+
+    return actual_price
+
+
 # scrapes the sold listings, I will pass all the arrays and the soup as arguments
 def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_results, listing_formats, listings_num):
     # all the sold listings contain the unique "data-viewport" attribute, which is used to scrape them all.
@@ -666,7 +679,7 @@ else:
     exit(1)   # exit if there are no results for the card
 
 
-### TO-DO: sort your results arrays before outputing to CSV file and pricing below!!!
+#sort your results arrays before outputing to CSV file and pricing below!!!
 selection_sort_scraped_results(sold_dates, titles, prices, shipping, total_prices)
 
 # create csv file and add results to it

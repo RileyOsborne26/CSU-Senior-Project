@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 import sys
 import csv
 import subprocess  #needed since we are using WSL
+import time #use to test the speed
 
 # ToC
 ### User input & URL manipulation - Line 142
@@ -627,6 +628,9 @@ print(url)
 # open the web url, used some help from ChatGPT. It is harder because the environment is WSL. That is why subprocess was chosen.
 subprocess.run(['powershell.exe', 'Start-Process', f'"{url}"'])
 
+# start timer for web scraping
+webscrape_time_start = time.time()
+
 # request to download the webpage from the url we made
 page = requests.get(url)
 
@@ -678,6 +682,8 @@ else:
     print("ERROR: we could not find any sold data for your card, so pricing is not yet supported.")
     exit(1)   # exit if there are no results for the card
 
+#the end of the webscraping portion
+webscrape_time_end = time.time()
 
 #sort your results arrays before outputing to CSV file and pricing below!!!
 selection_sort_scraped_results(sold_dates, titles, prices, shipping, total_prices)
@@ -689,6 +695,8 @@ scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shipping, t
 #search_results = soup.find('div', id='srp-river-results').find('ul', class_='srp-results srp-list clearfix')####.find_all('li', class_='s-item s-item__before-answer s-item__pl-on-bottom')
 #soup.find_next('li', attrs={'data-viewport': True})
 
+#variable for testing speed of the pricing algorithm, to be added to the overall time total
+pricing_time_start = time.time()
 
 #### Card Pricing Functionality ####
 # date variables for pricing and date object operations
@@ -739,25 +747,28 @@ if adjusted_results_num > 9:
     temp_adj = adjusted_results_num - 5
     first_five = total_prices[temp_adj:adjusted_results_num]
     last_five = total_prices[0:5]
+    
+    first_five_sum = 0
+    for i in first_five:
+        first_five_sum += i
+        print(i)
 
-first_five_sum = 0
-for i in first_five:
-    first_five_sum += i
-    print(i)
+    first_five_avg = first_five_sum / 5
 
-first_five_avg = first_five_sum / 5
+    print("gap")
 
-print("gap")
+    last_five_sum = 0
+    for i in last_five:
+        last_five_sum += i
+        print(i)
 
-last_five_sum = 0
-for i in last_five:
-    last_five_sum += i
-    print(i)
+    last_five_avg = last_five_sum / 5
 
-last_five_avg = last_five_sum / 5
+    print("newest five average: " + str(last_five_avg))
+    print("oldest five average: " + str(first_five_avg))
 
-print("newest five average: " + str(last_five_avg))
-print("oldest five average: " + str(first_five_avg))
+
+
 print("Average total: " + str(total_prices_average))
 
 # my pricing strategy will be to calculate the price based off what I can figure out about the
@@ -807,29 +818,29 @@ print("avg num sold per day in the last 30 days: " + str( avg_sold_last_thirty )
 
 # handle pricing differently according to the avg_sold_newest first. The if statements use ratio = (cards sold/every 7 days)
 # note, IF the current pricing is underperforming, then next build can use EMA and dig deeper into some of the data
-if avg_sold_last_thirty < (1/7):    # 1/7 is one sale a week
+if avg_sold_last_thirty < (1/7):    # 1/7 is one sale a week (0-0.143 a day for last 30 days)
     current_value = total_prices[0]
-elif avg_sold_last_thirty >= (1/7) and avg_sold_last_thirty <= (3/7):  # interval for 5-12 avg sold in last 30 days
+elif avg_sold_last_thirty >= (1/7) and avg_sold_last_thirty <= (3/7):  # interval for 5-12 avg sold in last 30 days (0.143-0.429 a day for last 30 days)
     current_value_sum = total_prices[0] + total_prices[1]
 
     # using last x amount sold method
     current_value = round((current_value_sum / 2), 2)
-elif avg_sold_last_thirty > (3/7) and avg_sold_last_thirty <= (4/7):   # interval for 13-17 avg sold in last 30 days
+elif avg_sold_last_thirty > (3/7) and avg_sold_last_thirty <= (4/7):   # interval for 13-17 avg sold in last 30 days (0.429-0.571 a day for last 30 days)
     current_value_sum = total_prices[0] + total_prices[1] + total_prices[2]
 
     # using last x amount sold method
     current_value = round((current_value_sum / 3), 2)
-elif avg_sold_last_thirty > (4/7) and avg_sold_last_thirty <= (6/7):   # interval for 18-25 avg sold in last 30 days    
+elif avg_sold_last_thirty > (4/7) and avg_sold_last_thirty <= (6/7):   # interval for 18-25 avg sold in last 30 days (0.571-0.857 a day for last 30 days)
     current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3]
 
     # using last x amount sold method
     current_value = round((current_value_sum / 4), 2)
-elif avg_sold_last_thirty > (6/7) and avg_sold_last_thirty <= (8/7):   # interval for 26-34 avg sold in last 30 days
+elif avg_sold_last_thirty > (6/7) and avg_sold_last_thirty <= (8/7):   # interval for 26-34 avg sold in last 30 days (0.857-1.143 a day for last 30 days)
     current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3] + total_prices[4]
     
     # using last x amount sold method
     current_value = round((current_value_sum / 5), 2)
-elif avg_sold_last_thirty > (8/7) and avg_sold_last_thirty <= (11/7):   # interval for 35-47 avg sold in last 30 days
+elif avg_sold_last_thirty > (8/7) and avg_sold_last_thirty <= (11/7):   # interval for 35-47 avg sold in last 30 days (1.143-1.571 a day for last 30 days)
     # use the last 4 days of sales method
     current_value_sum = 0
     days_to_search = 4   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
@@ -864,7 +875,7 @@ elif avg_sold_last_thirty > (8/7) and avg_sold_last_thirty <= (11/7):   # interv
             current_value_sum += total_prices[idx]
         
         current_value = round((current_value_sum / sold_count), 2)
-elif avg_sold_last_thirty > (11/7) and avg_sold_last_thirty <= (15/7):   # interval for 48-64 avg sold in last 30 days
+elif avg_sold_last_thirty > (11/7) and avg_sold_last_thirty <= (15/7):   # interval for 48-64 avg sold in last 30 days (1.571-2.143 a day for last 30 days)
     # use the last 3 days of sales method
     current_value_sum = 0
     days_to_search = 3   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
@@ -899,7 +910,9 @@ elif avg_sold_last_thirty > (11/7) and avg_sold_last_thirty <= (15/7):   # inter
             current_value_sum += total_prices[idx]
         
         current_value = round((current_value_sum / sold_count), 2)
-elif avg_sold_last_thirty > (15/7) and avg_sold_last_thirty * 30 <= 80:   # interval for 65-80 avg sold in last 30 days. 80 was chose because the results are limited to the past 90 days or 240 total. 240/3=80listings and 90/3=30days
+elif avg_sold_last_thirty > (15/7) and avg_sold_last_thirty * 30 <= 80:   # interval for 65-80 avg sold in last 30 days. (2.143-2.667 a day for last 30 days) 
+    #80 was chose in the conditional because the results are limited to the past 90 days or 240 total. 240/3=80listings and 90/3=30days
+
     # use the last 2 days of sales method
     current_value_sum = 0
     days_to_search = 2   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
@@ -934,7 +947,7 @@ elif avg_sold_last_thirty > (15/7) and avg_sold_last_thirty * 30 <= 80:   # inte
             current_value_sum += total_prices[idx]
         
         current_value = round((current_value_sum / sold_count), 2)
-else:
+else:   #(2.667+ a day for last 30 days)
     # use the last day of sales method
     current_value_sum = 0
     days_to_search = 1   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
@@ -962,3 +975,12 @@ else:
         current_value = round((current_value_sum / sold_count), 2)
 
 print("Current value: " + str( current_value ))
+
+#the variables for testing and improving the time. This time includes sorting the results.
+pricing_time_end = time.time()
+
+webscrape_total_time = webscrape_time_end - webscrape_time_start
+pricing_total_time = pricing_time_end - pricing_time_start
+
+total_time = webscrape_total_time + pricing_total_time
+print("Time to complete pricing from beginning of web scraping to returning the market value: " + str( total_time )) 

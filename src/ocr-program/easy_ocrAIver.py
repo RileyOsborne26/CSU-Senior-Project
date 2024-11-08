@@ -107,7 +107,7 @@ def print_OCRresults(text_boxes, words, confidence_level):
         print(confidence_level[i])
         print('\n')
 
-# 
+# A failed attempt to run 
 def rerun_with_pytess(img, cropped_images, text_boxes, words, pytesseract_results):
     # declare the timing variables as global to solve to issue of them not changing after the function completes
     global time_cropped_easyocr, time_cropped_pytesseract 
@@ -121,7 +121,7 @@ def rerun_with_pytess(img, cropped_images, text_boxes, words, pytesseract_result
         #display_cropped_image(i, cropped_images)
 
     pytesseract_time_start = time.time()    # start the time
-    print("Check 1")
+    print("Check 1") #test
 
     # this is a dictionary which will include all of the different PSM results. The complete dictionary will then be appended to an array.
     pytess_dict = {
@@ -141,7 +141,7 @@ def rerun_with_pytess(img, cropped_images, text_boxes, words, pytesseract_result
             temp_results6 = pool.map(multiprocess_psm_six, cropped_images)
     else:
         return
-    print("Check 2")
+    print("Check 2") #test
 
     temp_text = []   # needed in case the results return multiple words
     temp_conf = []   # needed in case the results return multiple confidence levels
@@ -162,7 +162,7 @@ def rerun_with_pytess(img, cropped_images, text_boxes, words, pytesseract_result
                 temp_conf.append(temp_results6[a]['conf'][b])
             b += 1
         a += 1
-    print("Check 3")
+    print("Check 3") #test
 
     # update the python dictionary confidence level result
     pytess_dict.update({'psm_six_confidence': temp_conf})
@@ -175,7 +175,7 @@ def rerun_with_pytess(img, cropped_images, text_boxes, words, pytesseract_result
     if __name__ == "__main__":
         with Pool(processes=2) as pool:
             temp_results7 = pool.map(multiprocess_psm_seven, cropped_images)
-    print("Check 4")
+    print("Check 4") #test
 
     temp_text = []   # needed in case the results return multiple words
     temp_conf = []   # needed in case the results return multiple confidence levels
@@ -194,7 +194,7 @@ def rerun_with_pytess(img, cropped_images, text_boxes, words, pytesseract_result
                 temp_conf.append(temp_results7[a]['conf'][b])
             b += 1
         a += 1
-    print("Check 5")
+    print("Check 5") #test
 
     # update the python dictionary confidence level result
     pytess_dict.update({'psm_seven_confidence': temp_conf})
@@ -207,7 +207,7 @@ def rerun_with_pytess(img, cropped_images, text_boxes, words, pytesseract_result
     if __name__ == "__main__":
         with Pool(processes=2) as pool:
             temp_results13 = pool.map(multiprocess_psm_thirteen, cropped_images)
-    print("Check 6")
+    print("Check 6") #test
 
     pytesseract_time_end = time.time()    ### END THE TIME
     temp_text = []   # needed in case the results return multiple words
@@ -227,7 +227,7 @@ def rerun_with_pytess(img, cropped_images, text_boxes, words, pytesseract_result
                 temp_conf.append(temp_results13[a]['conf'][b])
             b += 1
         a += 1
-    print("Check 7")
+    print("Check 7") #test
 
     # update the python dictionary confidence level result
     pytess_dict.update({'psm_thirteen_confidence': temp_conf})

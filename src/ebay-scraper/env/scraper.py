@@ -22,8 +22,8 @@ import time #use to test the speed
 # Author: Riley Osborne
 
 # list of product sets currently supported in the web scraping script
-SUPPORTED_SETS = ["Donruss", "Donruss Optic", "Prizm", "Panini Prizm", "Score", "Mosaic", "Chronicles", "Panini Chronicles",
-                   "Phoenix", "Torque", "Panini Torque", "Contenders", "Panini Contenders"]
+SUPPORTED_SETS = ["Chronicles", "Panini Chronicles", "Contenders", "Panini Contenders", "Donruss", "Donruss Optic", 
+                   "Mosaic", "Phoenix", "Prizm", "Panini Prizm", "Score", "Torque", "Panini Torque"]
 
 # list of sports currently supported
 SUPPORTED_SPORTS = ["Baseball", "Basketball", "Football", "Nascar"]
@@ -52,10 +52,7 @@ def print_sports_list():
         count += 1
 
 # get parallel colors list for the given SET + SPORT + YEAR in hopes of narrowing down search
-def get_parallel_colors_list(set_name, sport_index, year):
-    print(set_name)
-    print(sport_index)
-    print(year)
+def get_parallel_colors_list(set_name, sport_index, year, userChoice):
     # check the options
     if (set_name == "Donruss" and sport_index == 2 and year == "2018"):
         return ["blue", "green", "red", "silver", "gold", "black"]
@@ -64,13 +61,14 @@ def get_parallel_colors_list(set_name, sport_index, year):
     elif (set_name == "Score" and sport_index == 2 and year == "2016"):
         return []
     else:
-        # return empty list if set+sport+year is not supported
-        print("We are sorry, your card does not yet have a parallel colors list")
-        return []
+        # notify the user IF they indicated their card is a parallel that the attribute is not supported for their set+sport+year combination
+        if (userChoice == "y"): 
+            print("We are sorry, your card does not yet have a parallel colors list")
+        return [] # return empty list if set+sport+year is not supported
     
 
 # get parallel types list for the given SET + SPORT + YEAR in hopes of narrowing down search
-def get_parallel_types_list(set_name, sport_index, year):
+def get_parallel_types_list(set_name, sport_index, year, userChoice):
     # check the options
     if (set_name == "Donruss" and sport_index == 2 and year == "2018"):
         # removed "nfl" from player's logo and from shield.
@@ -80,9 +78,10 @@ def get_parallel_types_list(set_name, sport_index, year):
     elif (set_name == "Score" and sport_index == 2 and year == "2016"):
         return []
     else:
-        # return empty list if set+sport+year is not supported
-        print("We are sorry, your card does not yet have a parallel types list")
-        return []
+        # notify the user IF they indicated their card is a parallel that the attribute is not supported for their set+sport+year combination
+        if (userChoice == "y"):
+            print("We are sorry, your card does not yet have a parallel types list")
+        return [] # return empty list if set+sport+year is not supported
 
 # print the parallel colors list
 def print_parallel_colors(parallel_colors):
@@ -92,6 +91,10 @@ def print_parallel_colors(parallel_colors):
     for i in parallel_colors:
         print("[" + str(count) + "] " + i)
         count += 1
+    
+    # check if the list is empty and instruct user appropriately
+    if (count == 0):
+        print("Not supported. You can add a parallel color manually, but pricing accuracy can not be guaranteed.")
 
 # print the parallel types list
 def print_parallel_types(parallel_types):
@@ -101,6 +104,64 @@ def print_parallel_types(parallel_types):
     for i in parallel_types:
         print("[" + str(count) + "] " + i)
         count += 1
+
+    # check if the list is empty and instruct user appropriately
+    if (count == 0):
+        print("Not supported. You can add a parallel type manually, but pricing accuracy can not be guaranteed.")
+
+# print the items the user chose for the search and url
+def print_user_selections_summary(year, product_set, first_name, last_name, isRookie, isAuto, isParallel, parallelColor, isNumbered, printRun, cardNumber):
+    # display all the details for the user to approve
+    print("\n" + "Your search keywords (0 = not set):")
+    print("Year = " + year + "\n" + "Product set = " + product_set
+        + "\n" + "First name = " + first_name + "\n" + "Last name = " + last_name)
+    print("Rookie card = " + isRookie + "\n" + "Autographed = " + isAuto + "\n"
+        + "Parallel = " + isParallel + "\n" + "Parallel color = " + parallelColor + "\n"
+        + "Numbered = " + isNumbered + "\n" + "Print run = " + printRun + "\n"  + "Card number = " + cardNumber + "\n")
+
+# handles the user's selection when choosing not to confirm the search parameters. All potentially modifiable variables will be passed inside a list since strings are immutable as parameters in python functions
+def process_confirmation_selection(userSelection, mutable_strings):
+    if (userSelection == "0"): # exit
+        sys.exit()
+    elif (userSelection == "1"): # change first name
+        print("\nAthlete's current first name: " + mutable_strings[1])
+        mutable_strings[1] = input("Update the athlete's first name: ")
+    elif (userSelection == "2"): # change last name
+        print("\nAthlete's current last name: " + mutable_strings[2])
+        mutable_strings[2] = input("Update the althlete's last name: ")
+    elif (userSelection == "3"): # change print run
+        print("\nCurrent print run (format is /<current_number> if it is set, note 1/1 means there is one copy): " + mutable_strings[3])
+        mutable_strings[3] = input("Update the print run. Enter 0 if no print run is specified, otherwise please just enter the number of copies made: ")
+        
+        #user input validation
+        if (mutable_strings[3].isDigit() == 0):
+            # trusting the user is inputting a number now, but it need to be in range
+            while (int(mutable_strings[3]) < 0 and int(mutable_strings[3]) > 10000):
+                print("Invalid number. Please try again.")
+                mutable_strings[3] = input("Update the print run (number of card copies made) with a valid number: ")
+        else: # a number was not entered for the first time
+            print("Invalid input. Input should just be a number.")
+            mutable_strings[3] = input("Please enter just the number of copies of your card for the print run: ")
+
+            # trusting the user is inputting a number now, but it need to be in range
+            while (int(mutable_strings[3]) < 0 and int(mutable_strings[3]) > 10000):
+                print("Invalid number. Please try again.")
+                mutable_strings[3] = input("Update the print run (number of card copies made) with a valid number: ")
+        
+        # format answer to "/#" form for url if not 0
+        if (mutable_strings[3] != "0" and mutable_strings[3] != "1"):
+            mutable_strings[3] = "/" + mutable_strings[3]
+        elif (mutable_strings[3] == "1"): # format for one-of-one card
+            mutable_strings[3] = "1/1"
+    elif (userSelection == "4"): # change card number
+        print("\nCurrent card number: " + mutable_strings[4])
+        mutable_strings[4] = input("Update the card number (\"n/a\" will leave the card number value blank): ")
+    elif (userSelection == "5"): # add more user parameters
+        print("Already added search parameters: " + mutable_strings[5])
+        mutable_strings[5] = mutable_strings[5] + " " + input("To add additional search parameters, list them all here with a space between each one and they will be added to your previous parameters: ")
+    elif (userSelection == "6"):
+        print("Cancelling...")
+
 
 # trims the price data going into the results
 def format_price(main_price):
@@ -161,15 +222,8 @@ def scrape_page(sold_dates, titles, prices, shipping, total_prices, search_resul
     # all the sold listings contain the unique "data-viewport" attribute, which is used to scrape them all.
     search_results = soup.find('ul', class_='srp-results srp-list clearfix').find_all('li', attrs={'data-viewport': True})
 
-    print("###")
-    print(len(search_results))
-    print(listings_num)
-    print(range(listings_num))
-    print("###")
-
     # iterate only for the amount of search results returned
     for i in range(listings_num):
-        print(i)
         item_title = search_results[i].find('div').find(class_='s-item__info clearfix').find('a').find('div').find('span').text
         titles.append(item_title)
         
@@ -264,7 +318,7 @@ def scrape_results_to_csv(results_csvformat, sold_dates, titles, prices, shippin
     # terminating the operation and releasing the resources
     csv_file.close()
 
-    print("SUCCESS: web scraping to CSV function")
+    print("COMPLETE: web scraping results outputted to a CSV file")
 
 
 # This is a sort to fix Ebay's poor job of sorting listings by date with their "ended recently" filter
@@ -309,7 +363,7 @@ def selection_sort_scraped_results(sold_dates, titles, prices, shipping, total_p
         total_prices[newest_idx] = temp_total
 
 
-    print("**COMPLETE: Ebay sold listings were sorted by date.")
+    print("\n**SUCCESS: Ebay sold listings were sorted by date.")
 
 # return the number of sold listings for the x amount of past days
 # the first parameter is the dates sold list, second being the days you want to count into the past. Third parameter is current date.
@@ -347,12 +401,12 @@ while invalid:
             count += 1
 
 # keep the number of arguments
-argCount = len(sys.argv)
+argCount = len(sys.argv) #this implementation should allow you to put your input values in the command to run
 
 # start of user interaction
 ### get card year from arguments list or from the user
 if (argCount < 2):
-    year = input("Enter in the year your card was manufactured: ")
+    year = input("\nEnter in the year your card was manufactured: ")
 else:
     year = sys.argv[1]
     # check that the input is not a string
@@ -374,14 +428,14 @@ while(int(year) < 1860 or int(year) > currentYear):
 ### get product set name
 if(argCount < 3):
     print_set_products()
-    product_set = input("Enter in the card product set name: ")
+    product_set = input("\nEnter in a card product set name from the supported sets listed above: ")
 else:
     product_set = sys.argv[2]
 
 # validate product set name input
 while(product_set not in SUPPORTED_SETS):
     print("Invalid or unsupported product set name. Please try again.")
-    product_set = input("Enter in the card product set name: ")
+    product_set = input("Enter in a card product set name from the supported sets listed above: ")
 
 ### get first name
 if(argCount < 4):
@@ -433,12 +487,13 @@ else:
 
 
 # other detailed variables to implement later
-isAuto = "0"
+isAuto = "0" # currently not in use and needs to stay 0
 isParallel = "0"
 parallelColor = "0"
 parallelType = "0"
-isNumbered = "0"
+isNumbered = "0" # currently not in use and needs to stay 0
 printRun = "0"
+cardNumber = "n/a"
 
 # ask if the card is a parallel
 isParallel = input("\nIs the card a parallel (y/n): ")
@@ -454,41 +509,61 @@ set_parallel_types = []
 
 # get the array of parallel options for the given card
 # this was moved outside of the if statement for URL term excluding
-set_parallel_colors = get_parallel_colors_list(product_set, sport_index, year)
-set_parallel_types = get_parallel_types_list(product_set, sport_index, year)
+set_parallel_types = get_parallel_types_list(product_set, sport_index, year, isParallel)
+set_parallel_colors = get_parallel_colors_list(product_set, sport_index, year, isParallel)
 
-# handle when the user says the card has a parallel
+
+# handle when the user says the card has a parallel AND the colors and types are supported, meaning non-empty lists
 if isParallel == "y":
     # a variable to ensure that if isParallel is set to yes that at least one parallel attribute is assigned (color or type)
     invalid_isParallel = True
 
     # ask user if they want to input a parallel type
     print_parallel_types(set_parallel_types)
-    parallelType = input("\nAssign card a parallel type from list? (y/n): ")
+    if (set_parallel_types): # procedure for if the parallel types are supported
+        parallelType = input("\nAssign card a parallel type from list? (y/n): ")
 
-    # validate user input
-    while(parallelType != "y" and parallelType != "n"):
-        print("Invalid input. Please try again.")
-        parallelType = input("Assign card a parallel type from list? (y/n): ")
+        # validate user input
+        while(parallelType != "y" and parallelType != "n"):
+            print("Invalid input. Please try again.")
+            parallelType = input("Assign card a parallel type from list? (y/n): ")
 
-    # take input to determine how to handle parallelType
-    if parallelType == "y":
-        # parallel attribute will be set, so isParallel is set correctly
-        invalid_isParallel = False
+        # take input to determine how to handle parallelType
+        if parallelType == "y":
+            # parallel attribute will be set, so isParallel is set correctly
+            invalid_isParallel = False
 
-        # get parallel type from user and validate input
-        while(parallelType not in set_parallel_types):
-            parallelType = input("Enter in a card parallel type from the list: ")
-    # no else bc subtracting types from the search query is not always wise will reset to zero before creating url
+            # get parallel type from user and validate input
+            while(parallelType not in set_parallel_types):
+                parallelType = input("Enter in a card parallel type from the list: ")
+    else: # the list is empty
+        parallelType = input("\nAssign card a parallel type manually? (y/n): ")
+
+        # validate user input
+        while(parallelType != "y" and parallelType != "n"):
+            print("Invalid input. Please try again.")
+            parallelType = input("Assign card a parallel type manually? (y/n): ")
+
+        # take input to determine how to handle parallelType
+        if parallelType == "y":
+            # parallel attribute will be set, so isParallel is set correctly
+            invalid_isParallel = False
+
+            parallelType = input("Manually enter in the card parallel type: ")
+            
+    # no else for subtracting types bc subtracting types from the search query is not always wise will reset to zero before creating url
 
     # ask user if they want to input a parallel color
     print_parallel_colors(set_parallel_colors)
-    parallelColor = input("\nAssign card a parallel color from list? (y/n): ")
+    if (set_parallel_colors):
+        parallelColor = input("\nAssign card a parallel color from list? (y/n): ")
+    else: #use different language if it is not supported
+        parallelColor = input("\nAssign card a parallel color manually? (y/n): ")
 
     # validate user input
     while(parallelColor != "y" and parallelColor != "n"):
         print("Invalid input. Please try again.")
-        parallelColor = input("Assign card a parallel color from list? (y/n): ")
+        parallelColor = input("Assign card a parallel color? (y/n): ")
 
     # check that a parallel attribute was or will be actually set, or isParallel will change to "n"
     if parallelColor == "n" and invalid_isParallel == True:
@@ -516,9 +591,13 @@ if parallelColor == "y":
     # parallel attribute will be set, so isParallel is set correctly
     invalid_isParallel = False
 
-    # get parallel color from user and validate input
-    while(parallelColor not in set_parallel_colors):
-        parallelColor = input("Enter in a card parallel color from the list: ")
+    # ensure the list is not empty
+    if (set_parallel_colors):
+        # get parallel color from user and validate input
+        while(parallelColor not in set_parallel_colors):
+            parallelColor = input("Enter in a card parallel color from the list: ")
+    else:
+        parallelColor = input("Manually enter in the card parallel color: ")
 
     ### TO DO: exclude color terms that were NOT set to be parallelColor
     ###
@@ -539,6 +618,18 @@ else:
     # take off the extra "+" at the end of the string    
     colorsString = colorsString[0:-1]
 
+# set the card number according to the user's preferrence
+cardNumber = input("\nSpecify the card number (strongly recommended)? (y/n): ") #using cardNumber to store user's selection before setting cardNumber
+
+# input validation
+while (cardNumber != "y" and cardNumber != "n"):
+    print("Invalid input. Please try again.")
+    cardNumber = input("Specify the card number? (y/n): ")
+
+if (cardNumber == "y"):
+    cardNumber = input("Enter the card number: ")
+else:
+    cardNumber = "n/a" #reset back to n/a
 
 # if no then add colors to exclude from the url
 
@@ -555,21 +646,38 @@ if len(sys.argv) < 1:
 # it is for one product
 ###url_one_item = f'https://www.ebay.com/itm/{item_id}'
 
-# display all the details for the user to approve
-print("\n" + "Your search keywords (0 = not set):")
-print("Year = " + year + "\n" + "Product set = " + product_set
-      + "\n" + "First name = " + first_name + "\n" + "Last name = " + last_name)
-print("Rookie card = " + isRookie + "\n" + "Autographed = " + isAuto + "\n"
-      + "Parallel = " + isParallel + "\n" + "Parallel color = " + parallelColor + "\n"
-      + "Numbered = " + isNumbered + "\n" + "Print run = " + printRun + "\n")
+# show the use their selections
+print_user_selections_summary(year, product_set, first_name, last_name, isRookie, isAuto, isParallel, parallelColor, isNumbered, printRun, cardNumber)
 
 # ask user if they want to add parameters to search
-confirm = "n"
+confirm = ""
+userAdditions = input("If you want to add any search parameters then list them all here with a space between each one (enter to skip): ")
+mutable_strings = ["null", first_name, last_name, printRun, cardNumber, userAdditions] # use the list to pass the strings to a function for modification, since strings are immutable as python function parameters
 
-while (confirm == "n" or confirm == "N"):
-    userAdditions = input("If you want to add any search parameters then list them all here with a space between each one: ")
+while (confirm != "y"):
     # confirm user selections
     confirm = input("Confirm your search parameter? (y/n): ")
+
+    if (confirm == "n"):
+        print("\nUser options menu:\n[0] Exit program\n[1] Change player first name\n[2] Change player last name\n[3] Specify a card print run number\n[4] Change the card number\n[5] Add additional search parameters\n[6] Cancel")
+        selection = input("Enter the number for the action would you like to take: ")
+
+        # force the user to choose an option
+        while (selection != "0" and selection != "1" and selection != "2" and selection != "3" and selection != "4" and selection != "5" and selection != "6"):
+            selection = input("Enter the number for the action would you like to take: ")
+        
+        # do action appropriate for user selection, a list with the potential variables to modify is passed to the function
+        process_confirmation_selection(selection, mutable_strings)
+
+        # re-assign variable to their respective item in the list to save the changes
+        first_name = mutable_strings[1]
+        last_name = mutable_strings[2]
+        printRun = mutable_strings[3]
+        cardNumber = mutable_strings[4]
+        userAdditions = mutable_strings[5]
+
+        # show the user all their changes again so they can approve
+        print_user_selections_summary(year, product_set, first_name, last_name, isRookie, isAuto, isParallel, parallelColor, isNumbered, printRun, cardNumber)
 
 #### variable format tweaking section for url manipulation
 # reconstruct user parameters for URL
@@ -605,6 +713,9 @@ if parallelType == "n":
     parallelType = typesString
     #parallelType = "0"
 
+# Change cardNumber to "0" if == "n/a"
+if cardNumber == "n/a":
+    cardNumber = "0"
 
 ###TO DO: change isAuto to "auto" if == y, else switch back to "0"
 ###
@@ -619,11 +730,11 @@ if (len(userAdditions) < 1):
     userAdditions = 0
 
 # building the url for ebay sold data
-url = f'https://www.ebay.com/sch/i.html?_nkw={year}+{product_set}+{first_name}+{last_name}+{userAdditions}+{isGraded}+{isRookie}+{isAuto}+{isParallel}+{parallelType}+{parallelColor}+{isNumbered}+{printRun}&Grade{gradedUrlBit}&_sacat=0&type=s&_dcat=261328&LH_Complete=1&LH_Sold=1&_ipg=240'
+url = f'https://www.ebay.com/sch/i.html?_nkw={year}+{product_set}+{first_name}+{last_name}+{userAdditions}+{isGraded}+{isRookie}+{cardNumber}+{isAuto}+{isParallel}+{parallelType}+{parallelColor}+{isNumbered}+{printRun}&Grade{gradedUrlBit}&_sacat=0&type=s&_dcat=261328&LH_Complete=1&LH_Sold=1&_ipg=240'
 
 # take out all unset values
 url = url.replace("+0", "")
-print(url)
+print("\nUrl:\n" + url)
 
 # open the web url, used some help from ChatGPT. It is harder because the environment is WSL. That is why subprocess was chosen.
 subprocess.run(['powershell.exe', 'Start-Process', f'"{url}"'])
@@ -639,7 +750,7 @@ page = requests.get(url)
 soup = BeautifulSoup(page.text, 'html.parser')
 
 # scraping logic
-print('scraping logic')
+print('\nscraping logic')
 
 # arrays to hold the date, titles, listing formats (auction, buy it now), and prices. search results holds all the returned listings
 sold_dates = []
@@ -663,11 +774,9 @@ results_csvformat = []
 
 # get the number of search results!!!
 results_num = soup.find('div', 'srp-controls__control srp-controls__count').find_next('span', class_='BOLD').text
-print("***")
-print(results_num)
 results_num = int(results_num)    # make it an integer
-print("Results Number: " + str( results_num ))
-print("***")
+print("Number of sold listings found: " + str( results_num ))
+
 
 # this variable will be used to eliminate a magic number and for some array indexing during card pricing
 adjusted_results_num = results_num
@@ -717,21 +826,21 @@ sixty_days_interval = current_date - relativedelta(days=60)
 current_value = 0
 
 # TESTING date format and relative accuracy
-print(datetime.datetime.strftime(current_date, '%m-%d-%Y') + " - today")
-print(datetime.datetime.strftime(day_interval, '%m-%d-%Y') + " - day ago")
-print(datetime.datetime.strftime(week_interval, '%m-%d-%Y') + " - week ago")
-print(datetime.datetime.strftime(month_interval, '%m-%d-%Y') + " - month ago")
-print(datetime.datetime.strftime(three_month_interval, '%m-%d-%Y') + " - 3 months ago")
-print(datetime.datetime.strftime(six_month_interval, '%m-%d-%Y') + " - 6 months ago")
-print(datetime.datetime.strftime(year_interval, '%m-%d-%Y') + " - year ago")
+#print(datetime.datetime.strftime(current_date, '%m-%d-%Y') + " - today")
+#print(datetime.datetime.strftime(day_interval, '%m-%d-%Y') + " - day ago")
+#print(datetime.datetime.strftime(week_interval, '%m-%d-%Y') + " - week ago")
+#print(datetime.datetime.strftime(month_interval, '%m-%d-%Y') + " - month ago")
+#print(datetime.datetime.strftime(three_month_interval, '%m-%d-%Y') + " - 3 months ago")
+#print(datetime.datetime.strftime(six_month_interval, '%m-%d-%Y') + " - 6 months ago")
+#print(datetime.datetime.strftime(year_interval, '%m-%d-%Y') + " - year ago")
 
 # get the endpoints of the range of sold card data gathered (oldest and most recent)
 last_sold_date = get_newest_sold_date()
 oldest_sold_date = get_oldest_sold_date(sold_dates, adjusted_results_num)
 
-print("sold data range endpoints: ")
-print(str(oldest_sold_date) + " " + str(total_prices[adjusted_results_num - 1]))
-print(str(last_sold_date) + " " + str(total_prices[0]))
+print("\nSold listing dates range: ")
+print("Oldest sold listing date - " + str(oldest_sold_date) + " (Price = $" + str(total_prices[adjusted_results_num - 1]) + ")")
+print("Newest sold listing date - " + str(last_sold_date) + " (Price = $" + str(total_prices[0]) + ")\n")
 
 ### testing out prices
 total_prices_sum = 0
@@ -748,28 +857,30 @@ if adjusted_results_num > 9:
     first_five = total_prices[temp_adj:adjusted_results_num]
     last_five = total_prices[0:5]
     
+    print("Sold prices for oldest 5 listings:")
     first_five_sum = 0
+    countOld = adjusted_results_num - 1
     for i in first_five:
+        print("date - " + str( sold_dates[countOld] ) + ", price - $" + str( i ))
+        countOld = countOld - 1
         first_five_sum += i
-        print(i)
 
     first_five_avg = first_five_sum / 5
 
-    print("gap")
-
+    print("\nSold prices for newest 5 listings:")
     last_five_sum = 0
+    countNew = 0
     for i in last_five:
+        print("date - " + str( sold_dates[countNew] ) + ", price - $" + str( i ))
+        countNew = countNew - 1
         last_five_sum += i
-        print(i)
 
     last_five_avg = last_five_sum / 5
 
-    print("newest five average: " + str(last_five_avg))
-    print("oldest five average: " + str(first_five_avg))
-
-
-
-print("Average total: " + str(total_prices_average))
+    print("\nOldest five listings average sold price: " + str( round(first_five_avg, 2) )) 
+    print("Newest five listings average sold price: " + str( round(last_five_avg, 2) ))
+    
+print("Overall total listings average sold price: " + str( round(total_prices_average, 2) ))
 
 # my pricing strategy will be to calculate the price based off what I can figure out about the
 # sold dates. In order not to bog down the system, I will look at the sold dates data as analytically
@@ -782,9 +893,9 @@ dt_current_from_oldest = current_date - oldest_sold_date    # timedelta of the a
 # convert timedelta to integer
 current_from_oldest = dt_current_from_oldest.days
 
-print("Oldest sold date: " + str( oldest_sold_date ))
-print("Newest sold date: " + str( newest_sold_date ))
-print("Days since oldest sold date: " + str( current_from_oldest ))
+print("\nOldest listing sold date: " + str( oldest_sold_date ))
+print("Newest listing sold date: " + str( newest_sold_date ))
+print("Days since oldest listing sold date: " + str( current_from_oldest ))
 
 # counting variables for determining what time intervals the sold items fall into
 newest_count = 0
@@ -803,40 +914,45 @@ for i in sold_dates:
     else:
         oldest_count += 1
 
-print("New count: " + str( newest_count ))
-print("Mid count: " + str( middle_count ))
-print("Old count: " + str( oldest_count ))
+print("New listings count (<30 days old): " + str( newest_count ))
+print("Mid listings count (30-60 days old): " + str( middle_count ))
+print("Old listings count (>60 days old): " + str( oldest_count ))
 
 # get the average number of cards sold per day
 # LIKELY to get skewed from results over 90 days. Not essential to project atm.
 avg_sold_per_day = len(sold_dates) / current_from_oldest
-print("avg sold per day: " + str( avg_sold_per_day ))
+print("Average number of sold listings per day: " + str( round(avg_sold_per_day, 2) ))
 
 # get the average number of cards sold last 30 days (convert datetime.date to int)
 avg_sold_last_thirty = newest_count / (current_date - thirty_days_interval).days
-print("avg num sold per day in the last 30 days: " + str( avg_sold_last_thirty ))
+print("Average number of sold listings per day over the last 30 days: " + str( round(avg_sold_last_thirty, 2) ))
 
 # handle pricing differently according to the avg_sold_newest first. The if statements use ratio = (cards sold/every 7 days)
 # note, IF the current pricing is underperforming, then next build can use EMA and dig deeper into some of the data
 if avg_sold_last_thirty < (1/7):    # 1/7 is one sale a week (0-0.143 a day for last 30 days)
+    print("\nPricing method used: look at the newest sold listing due to the amount of recent data available")
     current_value = total_prices[0]
 elif avg_sold_last_thirty >= (1/7) and avg_sold_last_thirty <= (3/7):  # interval for 5-12 avg sold in last 30 days (0.143-0.429 a day for last 30 days)
     current_value_sum = total_prices[0] + total_prices[1]
+    print("\nPricing method used: look over the 2 newest sold listings due to the amount of recent data available")
 
     # using last x amount sold method
     current_value = round((current_value_sum / 2), 2)
 elif avg_sold_last_thirty > (3/7) and avg_sold_last_thirty <= (4/7):   # interval for 13-17 avg sold in last 30 days (0.429-0.571 a day for last 30 days)
     current_value_sum = total_prices[0] + total_prices[1] + total_prices[2]
+    print("\nPricing method used: look over the 3 newest sold listings due to the amount of recent data available")
 
     # using last x amount sold method
     current_value = round((current_value_sum / 3), 2)
 elif avg_sold_last_thirty > (4/7) and avg_sold_last_thirty <= (6/7):   # interval for 18-25 avg sold in last 30 days (0.571-0.857 a day for last 30 days)
     current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3]
+    print("\nPricing method used: look over the 4 newest sold listings due to the amount of recent data available")
 
     # using last x amount sold method
     current_value = round((current_value_sum / 4), 2)
 elif avg_sold_last_thirty > (6/7) and avg_sold_last_thirty <= (8/7):   # interval for 26-34 avg sold in last 30 days (0.857-1.143 a day for last 30 days)
     current_value_sum = total_prices[0] + total_prices[1] + total_prices[2] + total_prices[3] + total_prices[4]
+    print("\nPricing method used: look over the 5 newest sold listings due to the amount of recent data available")
     
     # using last x amount sold method
     current_value = round((current_value_sum / 5), 2)
@@ -845,14 +961,16 @@ elif avg_sold_last_thirty > (8/7) and avg_sold_last_thirty <= (11/7):   # interv
     current_value_sum = 0
     days_to_search = 4   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
     sold_count = sold_in_range(sold_dates, days_to_search, current_date)    # get the number of sold listings
-    print("days count for interval: 4 days & " + str(sold_count) + " results")
+    print("\nPricing method used: look over the past 4 days (" + str(sold_count) + " sold listings found)")
 
     #using if statements to catch edge cases where the sold count is outside the expected range. 
     if (sold_count == 0): 
+        print("**no listings met the method criteria, using the last sold listing price")
         #set price to last sold if no results are found for the days_to_search
         current_value = total_prices[0]
     #(8/7)*the number of days to get sold data represents the minimum amount of expected returned listings in the range. Sold_count should be in that range and if it is BELOW then we will fix that here.
     elif (sold_count < ((8/7)*days_to_search)):
+        print("**less sold data found than the expected minimum. Adding the newest sold listing outside of the method's range to the calculations.")
         #get the values normally first
         for idx in range(sold_count):
             current_value_sum += total_prices[idx]
@@ -862,6 +980,7 @@ elif avg_sold_last_thirty > (8/7) and avg_sold_last_thirty <= (11/7):   # interv
         current_value = round((current_value_sum / (sold_count + 1)), 2)
     #(11/7)*the number of days to get sold data represents the max amount of expected returned listings in the range. Sold_count should be in that range and if it is ABOVE then we will fix that here.
     elif (sold_count > ((11/7)*days_to_search)):
+        print("**more sold data found than the expected maximum. Removing the oldest sold listing within the method's range from the calculations.")
         #get the values normally first
         for idx in range(sold_count):
             current_value_sum += total_prices[idx]
@@ -880,14 +999,16 @@ elif avg_sold_last_thirty > (11/7) and avg_sold_last_thirty <= (15/7):   # inter
     current_value_sum = 0
     days_to_search = 3   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
     sold_count = sold_in_range(sold_dates, days_to_search, current_date)    # get the number of sold listings
-    print("days count for interval: 3 days & " + str(sold_count) + " results")
+    print("\nPricing method used: look over the past 3 days (" + str(sold_count) + " sold listings found)")
 
     #using if statements to catch edge cases where the sold count is outside the expected range. 
     if (sold_count == 0): 
+        print("**no listings met the method criteria, using the last sold listing price")
         #set price to last sold if no results are found for the days_to_search
         current_value = total_prices[0]
     #(11/7)*the number of days to get sold data represents the minimum amount of expected returned listings in the range. Sold_count should be in that range and if it is BELOW then we will fix that here.
     elif (sold_count < ((11/7)*days_to_search)):
+        print("**less sold data found than the expected minimum. Adding the newest sold listing outside of the method's range to the calculations.")
         #get the values normally first
         for idx in range(sold_count):
             current_value_sum += total_prices[idx]
@@ -897,6 +1018,7 @@ elif avg_sold_last_thirty > (11/7) and avg_sold_last_thirty <= (15/7):   # inter
         current_value = round((current_value_sum / (sold_count + 1)), 2)
     #(15/7)*the number of days to get sold data represents the max amount of expected returned listings in the range. Sold_count should be in that range and if it is ABOVE then we will fix that here.
     elif (sold_count > ((15/7)*days_to_search)):
+        print("**more sold data found than the expected maximum. Removing the oldest sold listing within the method's range from the calculations.")
         #get the values normally first
         for idx in range(sold_count):
             current_value_sum += total_prices[idx]
@@ -917,14 +1039,16 @@ elif avg_sold_last_thirty > (15/7) and avg_sold_last_thirty * 30 <= 80:   # inte
     current_value_sum = 0
     days_to_search = 2   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
     sold_count = sold_in_range(sold_dates, days_to_search, current_date)    # get the number of sold listings
-    print("days count for interval: 2 days & " + str(sold_count) + " results")
+    print("\nPricing method used: look over the past 2 days (" + str(sold_count) + " sold listings found)")
 
     #using if statements to catch edge cases where the sold count is outside the expected range. 
     if (sold_count == 0): 
+        print("**no listings met the method criteria, using the last sold listing price")
         #set price to last sold if no results are found for the days_to_search
         current_value = total_prices[0]
     #(15/7)*the number of days to get sold data represents the minimum amount of expected returned listings in the range. Sold_count should be in that range and if it is BELOW then we will fix that here.
     elif (sold_count < ((15/7)*days_to_search)):
+        print("**less sold data found than the expected minimum. Adding the newest sold listing outside of the method's range to the calculations.")
         #get the values normally first
         for idx in range(sold_count):
             current_value_sum += total_prices[idx]
@@ -934,6 +1058,7 @@ elif avg_sold_last_thirty > (15/7) and avg_sold_last_thirty * 30 <= 80:   # inte
         current_value = round((current_value_sum / (sold_count + 1)), 2)
     #(80/30)*the number of days to get sold data represents the max amount of expected returned listings in the range. Sold_count should be in that range and if it is ABOVE then we will fix that here.
     elif (sold_count > ((80/30)*days_to_search)):
+        print("**more sold data found than the expected maximum. Removing the oldest sold listing within the method's range from the calculations.")
         #get the values normally first
         for idx in range(sold_count):
             current_value_sum += total_prices[idx]
@@ -952,14 +1077,16 @@ else:   #(2.667+ a day for last 30 days)
     current_value_sum = 0
     days_to_search = 1   #used to calculate expected range and is equivalent to the number of days we are collecting sold data for
     sold_count = sold_in_range(sold_dates, days_to_search, current_date)    # get the number of sold listings
-    print("days count for interval: 1 day(s) & " + str(sold_count) + " results")
+    print("\nPricing method used: look over the past 1 day(s) (" + str(sold_count) + " sold listings found)")
 
     #check edge cases with conditionals
     if (sold_count == 0): 
         #set price to last sold if no results are found for the days_to_search
+        print("**no listings met the method criteria, using the last sold listing price")
         current_value = total_prices[0]
     #(80/30)*the number of days to get sold data represents the minimum amount of expected returned listings in the range. Sold_count should be in that range and if it is BELOW then we will fix that here.
     elif (sold_count < ((80/30)*days_to_search)):
+        print("**less sold data found than the expected minimum. Adding the newest sold listing outside of the method's range to the calculations.")
         #get the values normally first
         for idx in range(sold_count):
             current_value_sum += total_prices[idx]
@@ -974,7 +1101,7 @@ else:   #(2.667+ a day for last 30 days)
         
         current_value = round((current_value_sum / sold_count), 2)
 
-print("Current value: " + str( current_value ))
+print("\nEstimated current market value: " + str( current_value ))
 
 #the variables for testing and improving the time. This time includes sorting the results.
 pricing_time_end = time.time()
@@ -983,4 +1110,6 @@ webscrape_total_time = webscrape_time_end - webscrape_time_start
 pricing_total_time = pricing_time_end - pricing_time_start
 
 total_time = webscrape_total_time + pricing_total_time
-print("Time to complete pricing from beginning of web scraping to returning the market value: " + str( total_time )) 
+
+# Note: for some reason the timing is not meeting the speed requirements and I have no power to fix it >:(
+print("\nTime to complete pricing from beginning of web scraping to returning the market value: " + str( round(total_time, 2) ) + " seconds") 

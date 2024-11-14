@@ -48,6 +48,7 @@ def display_cropped_image(idx, cropped_images):
         cv2.waitKey(0)
     except cv2.error as e:
         print("OpenCV Error:", e)
+    # print(cropped_images[idx])
 
 # calls the easyocr reader to find and return the OCR results for the image parameter (2nd) given.
 # a blacklist is passed as an argument.
@@ -107,7 +108,7 @@ def print_OCRresults(text_boxes, words, confidence_level):
         print(confidence_level[i])
         print('\n')
 
-# A failed attempt to run 
+# A failed attempt to run with multithreading for speed increases
 def rerun_with_pytess(img, cropped_images, text_boxes, words, pytesseract_results):
     # declare the timing variables as global to solve to issue of them not changing after the function completes
     global time_cropped_easyocr, time_cropped_pytesseract 
@@ -503,6 +504,7 @@ print("time to complete pytesseract for CROPPED images: " + str(time_cropped_pyt
 # saves words found to a CSV file
 f = open("foundTextTest#1.csv", "a")
 f.write(F_text_full_easy + "\n")
+##f.write(B_text_full_easy + "\n")
 f.close()
 
 # reprints the words found again

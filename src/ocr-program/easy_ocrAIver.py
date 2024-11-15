@@ -68,7 +68,7 @@ def easyocr_get_results(reader, img, blacklist_pattern):
 
 # This function takes an OCR results array, an array of text bounding boxes,
 # an array of words found, an array of OCR confidence levels, and a string for image text.
-# returns text
+# returns text. This function is used for the EasyOCR full image run.
 def add_OCRdata_to_arrays(result, text_boxes, words, confidence_level, text):
     # x:y is the top left corner of the rectangle
     # W = res[i][1][0] - res[i][0][0]
@@ -401,8 +401,8 @@ def rerun_with_crop_and_display(reader, img, cropped_images, text_boxes, words, 
     pytess_dict.update({'psm_seven_text': temp_text7})
     pytess_dict.update({'psm_thirteen_confidence': temp_conf13})
     pytess_dict.update({'psm_thirteen_text': temp_text13})
-    easyocr_dict.update({"text": res[1]})
-    easyocr_dict.update({"confidence": res[2]})
+    easyocr_dict.update({"text": easyocr_text_results})
+    easyocr_dict.update({"confidence": easyocr_conf_results})
 
     # append the dictionaries to their respective results arrays
     pytesseract_results.append(pytess_dict)
@@ -495,6 +495,23 @@ B_cropped_easyocr_results = []
 rerun_with_crop_and_display(reader, imgF, F_cropped_images, F_text_boxes, F_words, F_pytess_results, F_cropped_easyocr_results)
 ##rerun_with_crop_and_display(reader, imgB, B_cropped_images, B_text_boxes, B_words, B_pytess_results, B_cropped_easyocr_results)
 #rerun_with_pytess(imgF, F_cropped_images, F_text_boxes, F_words, F_pytess_results)
+
+# test access to dictionary items
+print("TEST access:")
+print("Pytess PSM 6 values array ", F_pytess_results[0]["psm_six_text"])
+print("Pytess PSM 6 values array ", F_pytess_results[0]["psm_six_confidence"])
+print("Pytess PSM 7 values array ", F_pytess_results[0]["psm_seven_text"])
+print("Pytess PSM 7 values array ", F_pytess_results[0]["psm_seven_confidence"])
+print("Pytess PSM13 values array ", F_pytess_results[0]["psm_thirteen_text"])
+print("Pytess PSM13 values array ", F_pytess_results[0]["psm_thirteen_confidence"])
+print("EasyOCR ", F_cropped_easyocr_results[0]["text"])
+print("EasyOCR ", F_cropped_easyocr_results[0]["confidence"])
+print("Pytess array length: ", str( len(F_pytess_results) ))
+print("Cropped EasyOCR array length: " + str( len(F_cropped_easyocr_results) ))
+print("Cropped Pytesseract PSM 6 array length: " + str( len(F_pytess_results[0]["psm_six_text"]) ))
+print("Cropped Pytesseract PSM 7 array length: " + str( len(F_pytess_results[0]["psm_seven_text"]) ))
+print("Cropped Pytesseract PSM 13 array length: " + str( len(F_pytess_results[0]["psm_thirteen_text"]) ))
+print("Full EasyOCR array length: " + str( len(F_words) ))
 
 # print times
 print("time to complete easyOCR for WHOLE image: " + str(elapsed_time))

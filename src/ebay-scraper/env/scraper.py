@@ -859,10 +859,10 @@ if adjusted_results_num > 9:
     
     print("Sold prices for oldest 5 listings:")
     first_five_sum = 0
-    countOld = adjusted_results_num - 1
+    countOld = adjusted_results_num - 6
     for i in first_five:
         print("date - " + str( sold_dates[countOld] ) + ", price - $" + str( i ))
-        countOld = countOld - 1
+        countOld = countOld + 1
         first_five_sum += i
 
     first_five_avg = first_five_sum / 5
@@ -872,7 +872,7 @@ if adjusted_results_num > 9:
     countNew = 0
     for i in last_five:
         print("date - " + str( sold_dates[countNew] ) + ", price - $" + str( i ))
-        countNew = countNew - 1
+        countNew = countNew + 1
         last_five_sum += i
 
     last_five_avg = last_five_sum / 5
